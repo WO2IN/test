@@ -1,0 +1,45 @@
+import { SiteHeader } from '@/components/site-header'
+import { EquipmentFormDialog } from '@/components/equipment-form-dialog'
+import { EquipmentCard } from '@/components/equipment-card'
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
+import { FactoryIcon } from 'lucide-react'
+import { getEquipmentList } from '@/app/actions/equipment'
+
+export default async function EquipmentPage() {
+  const list = await getEquipmentList()
+
+  return (
+    <div className="min-h-screen">
+      <SiteHeader active="/equipment" />
+      <main className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">설비 관리</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              설비 정보와 사진, 일상점검 항목 템플릿을 관리합니다.
+            </p>
+          </div>
+          <EquipmentFormDialog />
+        </div>
+
+        {list.length === 0 ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <FactoryIcon />
+              </EmptyMedia>
+              <EmptyTitle>등록된 설비가 없습니다</EmptyTitle>
+              <EmptyDescription>설비를 등록하면 일상점검 체크시트를 작성할 수 있습니다.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {list.map((item) => (
+              <EquipmentCard key={item.id} equipment={item} />
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}
