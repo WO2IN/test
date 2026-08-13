@@ -1,27 +1,26 @@
-'use server'
+"use server"
 
-import { db } from '@/lib/db'
-import { tempHumiditySheets, tempHumidityEntries, tempHumidityIssues } from '@/lib/db/schema'
-import { and, asc, eq } from 'drizzle-orm'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from "next/cache"
+import { findOne, insertRow, removeWhere, selectWhere, updateById, updateWhere } from "@/lib/local-store"
 
 export async function getOrCreateTempHumiditySheet(year: number, month: number) {
-  const [existing] = await db
-    .select()
-    .from(tempHumiditySheets)
-    .where(and(eq(tempHumiditySheets.year, year), eq(tempHumiditySheets.month, month)))
+  const existing = findOne("tempHumiditySheets", (s: any) => s.year === year && s.month === month)
   if (existing) return existing
 
-  const [created] = await db.insert(tempHumiditySheets).values({ year, month }).returning()
-  return created
+  return insertRow("tempHumiditySheets", {
+    year,
+    month,
+    writer: null,
+    reviewer: null,
+    approver: null,
+    createdAt: new Date().toISOString(),
+  })
 }
 
 export async function getTempHumidityEntries(sheetId: number) {
-  return db
-    .select()
-    .from(tempHumidityEntries)
-    .where(eq(tempHumidityEntries.sheetId, sheetId))
-    .orderBy(asc(tempHumidityEntries.day))
+  return selectWhere("tempHumidityEntries", (e: any) => e.sheetId === sheetId).sort(
+    (a: any, b: any) => a.day - b.day,
+  )
 }
 
 export async function upsertTempHumidityEntry(
@@ -29,49 +28,76 @@ export async function upsertTempHumidityEntry(
   day: number,
   fields: { temperature?: string | null; humidity?: string | null; checker?: string | null },
 ) {
-  const [existing] = await db
-    .select()
-    .from(tempHumidityEntries)
-    .where(and(eq(tempHumidityEntries.sheetId, sheetId), eq(tempHumidityEntries.day, day)))
+  const existing = findOne("tempHumidityEntries", (e: any) => e.sheetId === sheetId && e.day === day)
 
   if (existing) {
-    await db.update(tempHumidityEntries).set(fields).where(eq(tempHumidityEntries.id, existing.id))
+    updateById("tempHumidityEntries", (existing as any).id, fields)
   } else {
-    await db.insert(tempHumidityEntries).values({ sheetId, day, ...fields })
+    insertRow("tempHumidityEntries", { sheetId, day, ...fields })
   }
-  revalidatePath('/checksheets/temp-humidity')
+  revalidatePath("/checksheets/temp-humidity")
+}
+
+export async function bulkUpsertTempHumidityEntries(
+  sheetId: number,
+  entries: { day: number; temperature: string; humidity: string }[],
+) {
+  for (const { day, temperature, humidity } of entries) {
+    const existing = findOne("tempHumidityEntries", (e: any) => e.sheetId === sheetId && e.day === day)
+    if (existing) {
+      const patch: Record<string, string> = {}
+      if (!(existing as any).temperature) patch.temperature = temperature
+      if (!(existing as any).humidity) patch.humidity = humidity
+      if (Object.keys(patch).length > 0) {
+        updateById("tempHumidityEntries", (existing as any).id, patch)
+      }
+    } else {
+      insertRow("tempHumidityEntries", { sheetId, day, temperature, humidity, checker: null })
+    }
+  }
+  revalidatePath("/checksheets/temp-humidity")
+}
+
+export async function clearTempHumidityEntries(sheetId: number) {
+  removeWhere("tempHumidityEntries", (e: any) => e.sheetId === sheetId)
+  revalidatePath("/checksheets/temp-humidity")
 }
 
 export async function updateTempHumiditySheetFields(
   sheetId: number,
   fields: { writer?: string; reviewer?: string; approver?: string },
 ) {
-  await db.update(tempHumiditySheets).set(fields).where(eq(tempHumiditySheets.id, sheetId))
-  revalidatePath('/checksheets/temp-humidity')
+  updateById("tempHumiditySheets", sheetId, fields)
+  revalidatePath("/checksheets/temp-humidity")
 }
 
 export async function getTempHumidityIssues(sheetId: number) {
-  return db
-    .select()
-    .from(tempHumidityIssues)
-    .where(eq(tempHumidityIssues.sheetId, sheetId))
-    .orderBy(asc(tempHumidityIssues.id))
+  return selectWhere("tempHumidityIssues", (i: any) => i.sheetId === sheetId).sort(
+    (a: any, b: any) => a.id - b.id,
+  )
 }
 
 export async function addTempHumidityIssue(sheetId: number) {
-  await db.insert(tempHumidityIssues).values({ sheetId })
-  revalidatePath('/checksheets/temp-humidity')
+  insertRow("tempHumidityIssues", {
+    sheetId,
+    occurredDate: null,
+    content: null,
+    action: null,
+    note: null,
+    createdAt: new Date().toISOString(),
+  })
+  revalidatePath("/checksheets/temp-humidity")
 }
 
 export async function updateTempHumidityIssue(
   id: number,
   fields: { occurredDate?: string; content?: string; action?: string; note?: string },
 ) {
-  await db.update(tempHumidityIssues).set(fields).where(eq(tempHumidityIssues.id, id))
-  revalidatePath('/checksheets/temp-humidity')
+  updateWhere("tempHumidityIssues", (i: any) => i.id === id, fields)
+  revalidatePath("/checksheets/temp-humidity")
 }
 
 export async function deleteTempHumidityIssue(id: number) {
-  await db.delete(tempHumidityIssues).where(eq(tempHumidityIssues.id, id))
-  revalidatePath('/checksheets/temp-humidity')
+  removeWhere("tempHumidityIssues", (i: any) => i.id === id)
+  revalidatePath("/checksheets/temp-humidity")
 }

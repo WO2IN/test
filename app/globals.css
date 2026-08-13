@@ -167,17 +167,90 @@
 @media print {
   @page {
     size: A4 landscape;
-    margin: 8mm;
+    margin: 6mm;
   }
   html,
   body {
     background: white !important;
   }
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
   .no-print {
     display: none !important;
+  }
+  .weekend-cell {
+    background-color: #d4d4d8 !important;
+  }
+  .monthly-cell {
+    background-color: #fde68a !important;
+  }
+  .no-break {
+    break-inside: avoid;
+  }
+  .print-page {
+    gap: 6px !important;
+    padding: 0 !important;
+  }
+  .print-page h1 {
+    font-size: 13px !important;
+  }
+  .print-page p {
+    font-size: 9px !important;
+  }
+  .print-compact-box {
+    padding: 6px !important;
+    gap: 6px !important;
+  }
+  .print-compact-label {
+    padding: 1px 4px !important;
+    font-size: 9px !important;
+  }
+  .print-approval-box input,
+  .print-compact-input {
+    height: 20px !important;
+    min-height: 0 !important;
+    padding: 0 2px !important;
+    font-size: 9px !important;
+  }
+  .print-remarks textarea {
+    min-height: 28px !important;
+    padding: 2px 4px !important;
+    font-size: 9px !important;
+  }
+  .print-issue-table table {
+    font-size: 9px !important;
   }
   .print-sheet {
     box-shadow: none !important;
     border: 1px solid black !important;
+    overflow: visible !important;
+  }
+  .print-sheet table {
+    width: 100% !important;
+    font-size: 8px !important;
+  }
+  .print-sheet th,
+  .print-sheet td {
+    padding: 0 !important;
+  }
+  .print-day-cell {
+    height: 15px !important;
+    width: 16px !important;
+    min-width: 16px !important;
+  }
+  .print-category-cell {
+    width: 26px !important;
+    min-width: 26px !important;
+  }
+  .print-content-cell {
+    min-width: 0 !important;
+    width: 150px !important;
+  }
+  .print-cycle-cell {
+    width: 26px !important;
+    min-width: 26px !important;
   }
 }

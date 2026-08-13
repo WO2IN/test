@@ -64,13 +64,13 @@ export default async function DailyCheckDetailPage({
   return (
     <div className="min-h-dvh bg-background">
       <SiteHeader active="/checksheets/daily" />
-      <main className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-6 sm:px-6">
+      <main className="print-page mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-6 sm:px-6">
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
           <YearMonthPicker year={year} month={month} />
           <PrintButton />
         </div>
 
-        <div className="flex flex-wrap items-start justify-between gap-4 border border-border bg-card p-4">
+        <div className="print-compact-box flex flex-wrap items-start justify-between gap-4 border border-border bg-card p-4">
           <div className="flex flex-1 flex-col gap-1">
             <h1 className="text-balance text-xl font-semibold">
               {year}년 {month}월 설비 일상점검 체크시트
@@ -89,7 +89,7 @@ export default async function DailyCheckDetailPage({
         </div>
 
         {photos.length > 0 && (
-          <div className="print-sheet flex flex-wrap gap-3 border border-border bg-card p-4">
+          <div className="no-print print-sheet flex flex-wrap gap-3 border border-border bg-card p-4">
             {photos.map((photo) => (
               <figure key={photo.id} className="flex w-32 flex-col gap-1">
                 <img

@@ -24,9 +24,9 @@ export function IssueLogTable({ title = '이상발생 조치사항', columns, ro
   const [, startTransition] = useTransition()
 
   return (
-    <div className="no-break flex flex-col gap-2">
+    <div className="print-issue-table no-break flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">{title}</h2>
+        <h2 className="print-compact-label text-sm font-semibold">{title}</h2>
         <Button
           variant="outline"
           size="sm"
@@ -70,7 +70,7 @@ export function IssueLogTable({ title = '이상발생 조치사항', columns, ro
                         onBlur={(e) =>
                           startTransition(() => onUpdate(row.id, { [col.key]: e.target.value }))
                         }
-                        className="h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
+                        className="print-compact-input h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
                       />
                     </td>
                   ))}

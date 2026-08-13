@@ -13,14 +13,14 @@ export function RemarksField({ defaultValue, onSave, label = '특기사항' }: R
   const [value, setValue] = useState(defaultValue)
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium">{label}</span>
+    <div className="print-remarks flex flex-col gap-1.5">
+      <span className="print-compact-label text-sm font-medium">{label}</span>
       <Textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onBlur={() => onSave(value)}
         rows={3}
-        className="resize-none"
+        className="print-compact-textarea resize-none"
       />
     </div>
   )

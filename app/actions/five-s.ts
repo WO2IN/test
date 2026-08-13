@@ -1,43 +1,78 @@
-'use server'
+"use server"
 
-import { db } from '@/lib/db'
-import { fiveSSheets, fiveSEntries } from '@/lib/db/schema'
-import { and, eq } from 'drizzle-orm'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from "next/cache"
+import { findOne, insertRow, removeWhere, selectWhere, updateById } from "@/lib/local-store"
+import { FIVE_S_CATALOG } from "@/lib/constants/five-s-catalog"
+import { isWeekend } from "@/lib/date-utils"
 
 export async function getOrCreateFiveSSheet(year: number, month: number) {
-  const [existing] = await db
-    .select()
-    .from(fiveSSheets)
-    .where(and(eq(fiveSSheets.year, year), eq(fiveSSheets.month, month)))
+  const existing = findOne("fiveSSheets", (s: any) => s.year === year && s.month === month)
   if (existing) return existing
 
-  const [created] = await db.insert(fiveSSheets).values({ year, month }).returning()
-  return created
+  return insertRow("fiveSSheets", {
+    year,
+    month,
+    remarks: null,
+    writer: null,
+    reviewer: null,
+    approver: null,
+    createdAt: new Date().toISOString(),
+  })
 }
 
 export async function getFiveSEntries(sheetId: number) {
-  return db.select().from(fiveSEntries).where(eq(fiveSEntries.sheetId, sheetId))
+  return selectWhere("fiveSEntries", (e: any) => e.sheetId === sheetId)
 }
 
 export async function upsertFiveSEntry(sheetId: number, itemCode: string, day: number, value: string) {
-  const [existing] = await db
-    .select()
-    .from(fiveSEntries)
-    .where(and(eq(fiveSEntries.sheetId, sheetId), eq(fiveSEntries.itemCode, itemCode), eq(fiveSEntries.day, day)))
+  const existing = findOne(
+    "fiveSEntries",
+    (e: any) => e.sheetId === sheetId && e.itemCode === itemCode && e.day === day,
+  )
 
   if (existing) {
-    await db.update(fiveSEntries).set({ value }).where(eq(fiveSEntries.id, existing.id))
+    updateById("fiveSEntries", (existing as any).id, { value })
   } else {
-    await db.insert(fiveSEntries).values({ sheetId, itemCode, day, value })
+    insertRow("fiveSEntries", { sheetId, itemCode, day, value })
   }
-  revalidatePath('/checksheets/5s')
+  revalidatePath("/checksheets/5s")
+}
+
+export async function bulkFillFiveSEntries(
+  sheetId: number,
+  year: number,
+  month: number,
+  uptoDay: number,
+  symbol: string,
+) {
+  for (const item of FIVE_S_CATALOG) {
+    for (let day = 1; day <= uptoDay; day++) {
+      if (isWeekend(year, month, day)) continue
+      const existing = findOne(
+        "fiveSEntries",
+        (e: any) => e.sheetId === sheetId && e.itemCode === item.code && e.day === day,
+      )
+      if (!existing || !(existing as any).value) {
+        if (existing) {
+          updateById("fiveSEntries", (existing as any).id, { value: symbol })
+        } else {
+          insertRow("fiveSEntries", { sheetId, itemCode: item.code, day, value: symbol })
+        }
+      }
+    }
+  }
+  revalidatePath("/checksheets/5s")
+}
+
+export async function clearFiveSSheetEntries(sheetId: number) {
+  removeWhere("fiveSEntries", (e: any) => e.sheetId === sheetId)
+  revalidatePath("/checksheets/5s")
 }
 
 export async function updateFiveSSheetFields(
   sheetId: number,
   fields: { remarks?: string; writer?: string; reviewer?: string; approver?: string },
 ) {
-  await db.update(fiveSSheets).set(fields).where(eq(fiveSSheets.id, sheetId))
-  revalidatePath('/checksheets/5s')
+  updateById("fiveSSheets", sheetId, fields)
+  revalidatePath("/checksheets/5s")
 }

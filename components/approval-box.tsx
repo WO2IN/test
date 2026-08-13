@@ -25,7 +25,7 @@ export function ApprovalBox({ writer, reviewer, approver, onSave }: ApprovalBoxP
   }
 
   return (
-    <div className="flex shrink-0 border border-border">
+    <div className="print-approval-box flex shrink-0 border border-border">
       {(
         [
           ['writer', '작 성'],
@@ -34,7 +34,7 @@ export function ApprovalBox({ writer, reviewer, approver, onSave }: ApprovalBoxP
         ] as const
       ).map(([key, label], i) => (
         <div key={key} className={i > 0 ? 'border-l border-border' : ''}>
-          <div className="border-b border-border bg-muted px-3 py-1 text-center text-xs font-medium text-muted-foreground">
+          <div className="print-compact-label border-b border-border bg-muted px-3 py-1 text-center text-xs font-medium text-muted-foreground">
             {label}
           </div>
           <Input
@@ -42,7 +42,7 @@ export function ApprovalBox({ writer, reviewer, approver, onSave }: ApprovalBoxP
             onChange={(e) => setValues((v) => ({ ...v, [key]: e.target.value }))}
             onBlur={() => handleBlur(key)}
             placeholder="-"
-            className="h-10 w-24 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
+            className="print-compact-input h-10 w-24 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
           />
         </div>
       ))}

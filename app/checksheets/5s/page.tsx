@@ -33,13 +33,13 @@ export default async function FiveSPage({
   return (
     <div className="min-h-dvh bg-background">
       <SiteHeader active="/checksheets/5s" />
-      <main className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-6 sm:px-6">
+      <main className="print-page mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-6 sm:px-6">
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
           <YearMonthPicker year={year} month={month} />
           <PrintButton />
         </div>
 
-        <div className="flex flex-wrap items-start justify-between gap-4 border border-border bg-card p-4">
+        <div className="print-compact-box flex flex-wrap items-start justify-between gap-4 border border-border bg-card p-4">
           <div className="flex flex-1 flex-col gap-1">
             <h1 className="text-balance text-xl font-semibold">
               {year}년 {month}월 3정 5S Check Sheet
@@ -58,7 +58,7 @@ export default async function FiveSPage({
 
         <FiveSGrid sheetId={sheet.id} year={year} month={month} entries={entries} />
 
-        <div className="border border-border bg-card p-4">
+        <div className="print-compact-box border border-border bg-card p-4">
           <RemarksField defaultValue={sheet.remarks ?? ''} onSave={saveRemarks} />
         </div>
       </main>
