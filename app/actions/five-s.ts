@@ -48,6 +48,10 @@ export async function bulkFillFiveSEntries(
   for (const item of FIVE_S_CATALOG) {
     for (let day = 1; day <= uptoDay; day++) {
       if (isWeekend(year, month, day)) continue
+      const scheduled = item.cycle === '일'
+        || (item.cycle === '주' && new Date(year, month - 1, day).getDay() === 1)
+        || (item.cycle === '월' && day === Array.from({ length: day }, (_, index) => index + 1).find((candidate) => !isWeekend(year, month, candidate)))
+      if (!scheduled) continue
       const existing = findOne(
         "fiveSEntries",
         (e: any) => e.sheetId === sheetId && e.itemCode === item.code && e.day === day,

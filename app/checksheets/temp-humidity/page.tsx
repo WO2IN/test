@@ -50,7 +50,7 @@ export default async function TempHumidityPage({
   }
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="temp-humidity-page min-h-dvh bg-background">
       <SiteHeader active="/checksheets/temp-humidity" />
       <main className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-6 sm:px-6">
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
@@ -73,9 +73,9 @@ export default async function TempHumidityPage({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,320px)_1fr]">
-          <TempHumidityTable sheetId={sheet.id} year={year} month={month} entries={entries} />
+        <div className="flex flex-col gap-4">
           <TempHumidityChart year={year} month={month} entries={entries} />
+          <TempHumidityTable sheetId={sheet.id} year={year} month={month} entries={entries} />
         </div>
 
         <IssueLogTable

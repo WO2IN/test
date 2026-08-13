@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useOptimistic, useState, useTransition } from 'react'
+import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
 import { getDayRange, isWeekend } from '@/lib/date-utils'
 import { FIVE_S_CATALOG, FIVE_S_CATEGORIES, FIVE_S_SYMBOLS, type FiveSItem } from '@/lib/constants/five-s-catalog'
@@ -40,6 +40,9 @@ export function FiveSGrid({ sheetId, year, month, entries }: FiveSGridProps) {
   const [, startTransition] = useTransition()
   const [selectedSymbol, setSelectedSymbol] = useState<string>('○')
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
+  const [adminOpen, setAdminOpen] = useState(false)
+  const commandBuffer = useRef('')
+  const commandTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const entryMap = new Map(entries.map((e) => [`${e.itemCode}-${e.day}`, e.value ?? '']))
 
@@ -56,6 +59,26 @@ export function FiveSGrid({ sheetId, year, month, entries }: FiveSGridProps) {
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month
   const todayDay = today.getDate()
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      if (target?.matches('input, textarea, select, [contenteditable="true"]')) return
+      commandBuffer.current = `${commandBuffer.current}${event.key.toLowerCase()}`.slice(-8)
+      if (commandBuffer.current === 'woorihip') {
+        setAdminOpen((open) => !open)
+        commandBuffer.current = ''
+      }
+      if (commandTimer.current) clearTimeout(commandTimer.current)
+      commandTimer.current = setTimeout(() => { commandBuffer.current = '' }, 1500)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      if (commandTimer.current) clearTimeout(commandTimer.current)
+    }
+  }, [])
+
   function handleCellClick(item: FiveSItem, day: number) {
     const key = `${item.code}-${day}`
     const current = optimisticEntries.get(key) ?? ''
@@ -66,18 +89,23 @@ export function FiveSGrid({ sheetId, year, month, entries }: FiveSGridProps) {
     })
   }
 
-  function handleBulkFillToday() {
+  function isScheduledDay(item: FiveSItem, day: number) {
+    if (isWeekend(year, month, day)) return false
+    if (item.cycle === '일') return true
+    if (item.cycle === '주') return new Date(year, month - 1, day).getDay() === 1
+    return day === Array.from({ length: day }, (_, index) => index + 1).find((candidate) => !isWeekend(year, month, candidate))
+  }
+
+  function handleBulkFill(uptoDay: number) {
     startTransition(() => {
       for (const item of FIVE_S_CATALOG) {
-        for (let day = 1; day <= todayDay; day++) {
-          if (isWeekend(year, month, day)) continue
+        for (let day = 1; day <= uptoDay; day++) {
+          if (!isScheduledDay(item, day)) continue
           const key = `${item.code}-${day}`
-          if (!optimisticEntries.get(key)) {
-            setOptimisticEntry({ key, value: '○' })
-          }
+          if (!optimisticEntries.get(key)) setOptimisticEntry({ key, value: selectedSymbol })
         }
       }
-      bulkFillFiveSEntries(sheetId, year, month, todayDay, '○')
+      bulkFillFiveSEntries(sheetId, year, month, uptoDay, selectedSymbol)
     })
   }
 
@@ -121,16 +149,28 @@ export function FiveSGrid({ sheetId, year, month, entries }: FiveSGridProps) {
           지우개
         </Button>
 
-        {isCurrentMonth && (
+        {isCurrentMonth && adminOpen && (
           <Button
             type="button"
             size="sm"
             variant="secondary"
-            onClick={handleBulkFillToday}
+            onClick={() => handleBulkFill(todayDay)}
             className="ml-auto h-8 gap-1.5 px-2.5"
           >
             <CheckCheckIcon className="size-3.5" />
-            오늘({todayDay}일)까지 ○ 일괄체크
+            오늘({todayDay}일)까지 {selectedSymbol || '선택표시'} 일괄체크
+          </Button>
+        )}
+        {adminOpen && (
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => handleBulkFill(days.length)}
+            className="h-8 gap-1.5 px-2.5"
+          >
+            <CheckCheckIcon className="size-3.5" />
+            전체 {selectedSymbol || '선택표시'} 일괄체크
           </Button>
         )}
 
@@ -219,7 +259,7 @@ export function FiveSGrid({ sheetId, year, month, entries }: FiveSGridProps) {
                   {rowIdx === 0 && (
                     <td
                       rowSpan={rows.length}
-                      className="print-category-cell border-r border-b border-border bg-muted/60 p-1 text-center align-middle text-sm font-medium"
+                      className="print-category-cell whitespace-nowrap border-r border-b border-border bg-muted/60 p-1 text-center align-middle text-sm font-medium"
                     >
                       {category}
                     </td>

@@ -164,10 +164,84 @@
   }
 }
 
+.print-only {
+  display: none;
+}
+
 @media print {
   @page {
     size: A4 landscape;
-    margin: 6mm;
+    margin: 4mm;
+  }
+  .temp-humidity-page {
+    min-height: 100vh !important;
+  }
+  .temp-humidity-page main {
+    max-width: none !important;
+    height: 100vh !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding: 0 !important;
+  }
+  .temp-humidity-page .print-sheet,
+  .temp-humidity-page .temp-humidity-chart,
+  .temp-humidity-page .print-issue-table {
+    break-inside: avoid;
+  }
+  .temp-humidity-page table {
+    font-size: 10px !important;
+  }
+  .temp-humidity-page th,
+  .temp-humidity-page td {
+    padding: 3px 4px !important;
+  }
+  .temp-humidity-page input {
+    height: 20px !important;
+    min-height: 0 !important;
+    font-size: 10px !important;
+  }
+  .temp-humidity-page .temp-humidity-chart {
+    padding: 10px !important;
+    gap: 6px !important;
+    flex: 2 1 auto !important;
+  }
+  .temp-humidity-page .temp-humidity-chart [class*="aspect"] {
+    height: 100% !important;
+    min-height: 320px !important;
+  }
+  .temp-humidity-page .temp-humidity-chart svg {
+    max-height: none !important;
+  }
+  .temp-humidity-page .print-sheet {
+    overflow: visible !important;
+  }
+  .temp-humidity-page .print-only {
+    display: table !important;
+  }
+  .temp-humidity-page .print-sheet table.print-only {
+    font-size: 10px !important;
+  }
+  .temp-humidity-page .print-only th,
+  .temp-humidity-page .print-only td {
+    padding: 5px 4px !important;
+    font-size: 10px !important;
+  }
+  .temp-humidity-page .temp-humidity-chart + .print-sheet {
+    margin-top: 0 !important;
+  }
+  .temp-humidity-page .temp-humidity-chart {
+    order: 1;
+  }
+  .temp-humidity-page .print-sheet {
+    order: 2;
+  }
+  .temp-humidity-page .print-issue-table {
+    order: 3;
+    flex: 1 1 auto !important;
+  }
+  .temp-humidity-page .print-issue-table table {
+    height: 100% !important;
+    font-size: 10px !important;
   }
   html,
   body {
@@ -242,8 +316,9 @@
     min-width: 16px !important;
   }
   .print-category-cell {
-    width: 26px !important;
-    min-width: 26px !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    white-space: nowrap !important;
   }
   .print-content-cell {
     min-width: 0 !important;

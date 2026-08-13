@@ -29,7 +29,7 @@ export function TempHumidityChart({ year, month, entries }: TempHumidityChartPro
   })
 
   return (
-    <div className="no-break flex flex-col gap-2 border border-border bg-card p-4">
+    <div className="temp-humidity-chart no-break flex flex-col gap-2 border border-border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold">온/습도 추이</h2>
         <p className="text-xs text-muted-foreground">관리기준: 온도 20±10℃ (LCL 10 / UCL 30) · 습도 60% 이하 (UCL 60)</p>
