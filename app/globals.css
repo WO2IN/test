@@ -265,8 +265,31 @@
     break-inside: avoid;
   }
   .print-page {
-    gap: 6px !important;
+    min-height: calc(100vh - 8mm) !important;
+    gap: 10px !important;
     padding: 0 !important;
+  }
+  .print-page > .print-compact-box:last-child {
+    margin-top: 10px !important;
+    flex: 0 1 auto !important;
+  }
+  .print-page > .print-sheet {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+  }
+  .print-page > .print-grid {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+  }
+  .print-grid > .print-sheet {
+    height: 100% !important;
+  }
+  .print-sheet table {
+    height: 100% !important;
+  }
+  .print-logo {
+    width: 88px !important;
+    height: auto !important;
   }
   .print-page h1 {
     font-size: 13px !important;

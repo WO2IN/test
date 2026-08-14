@@ -5,8 +5,19 @@ import { cn } from '@/lib/utils'
 import { getDayRange, isWeekend, dayOfWeekLabel } from '@/lib/date-utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { bulkUpsertTempHumidityEntries, upsertTempHumidityEntry } from '@/app/actions/temp-humidity'
-import { CalendarCheck2Icon, DicesIcon } from 'lucide-react'
+import { bulkUpsertTempHumidityEntries, upsertTempHumidityEntry, clearTempHumidityEntries } from '@/app/actions/temp-humidity'
+import { CalendarCheck2Icon, DicesIcon, Trash2Icon } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 interface TempHumidityEntry {
   day: number
@@ -140,12 +151,51 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
     })
   }
 
+  function handleClearAll() {
+    startTransition(() => {
+      days.forEach((day) => setOptimisticEntry({ day, fields: { temperature: null, humidity: null, checker: null } }))
+      clearTempHumidityEntries(sheetId)
+    })
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <div className="no-print flex flex-col gap-2 border border-border bg-card p-2">
         <div className="flex flex-wrap items-center gap-2">
-          {isCurrentMonth && <Button type="button" size="sm" variant="outline" onClick={fillUpToToday} className="h-8 gap-1.5 px-2.5"><CalendarCheck2Icon data-icon="inline-start" />오늘({todayDay}일)까지 채우기</Button>}
+          {isCurrentMonth && adminOpen && <Button type="button" size="sm" variant="outline" onClick={fillUpToToday} className="h-8 gap-1.5 px-2.5"><CalendarCheck2Icon data-icon="inline-start" />오늘({todayDay}일)까지 채우기</Button>}
 
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto h-8 gap-1.5 px-2.5 text-destructive hover:text-destructive"
+                />
+              }
+            >
+              <Trash2Icon className="size-3.5" />
+              전체 지우기
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>이번 달 온/습도 내용을 모두 지울까요?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {year}년 {month}월 온/습도 체크시트에 입력된 온도, 습도, 점검자 ���이 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>취소</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-white hover:bg-destructive/90"
+                  onClick={handleClearAll}
+                >
+                  전체 지우기
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
         {adminOpen && <div className="flex flex-wrap items-center gap-3 border-t border-border pt-2">
           <span className="text-xs font-medium">난수 범위</span>

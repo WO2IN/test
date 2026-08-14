@@ -59,11 +59,18 @@ export default async function TempHumidityPage({
         </div>
 
         <div className="flex flex-wrap items-start justify-between gap-4 border border-border bg-card p-4">
-          <div className="flex flex-1 flex-col gap-1">
-            <h1 className="text-balance text-xl font-semibold">
-              {year}년 {month}월 온/습도 체크시트
-            </h1>
-            <p className="text-sm text-muted-foreground">관리기준: 온도 20±10℃ · 습도 60% 이하</p>
+          <div className="flex flex-1 items-start gap-3">
+            <img
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%ED%9A%8C%EC%82%AC%EB%A1%9C%EA%B3%A0_%ED%88%AC%EB%AA%85-kdSjzuFUF1A1rzO914B2j1jjYSWH4Z.png"
+              alt="WOORI 로고"
+              className="print-logo h-12 w-auto object-contain"
+            />
+            <div className="flex flex-col gap-1">
+              <h1 className="text-balance text-xl font-semibold">
+                {year}년 {month}월 온/습도 체크시트
+              </h1>
+              <p className="text-sm text-muted-foreground">관리기준: 온도 20±10℃ · 습도 60% 이하</p>
+            </div>
           </div>
           <ApprovalBox
             writer={sheet.writer}

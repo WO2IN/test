@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { getDayRange, isWeekend } from '@/lib/date-utils'
 import { FIVE_S_CATALOG, FIVE_S_CATEGORIES, FIVE_S_SYMBOLS, type FiveSItem } from '@/lib/constants/five-s-catalog'
 import { upsertFiveSEntry, bulkFillFiveSEntries, clearFiveSSheetEntries } from '@/app/actions/five-s'
-import { CheckCheckIcon, EraserIcon, Trash2Icon } from 'lucide-react'
+import { CheckCheckIcon, Trash2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -122,7 +122,7 @@ export function FiveSGrid({ sheetId, year, month, entries }: FiveSGridProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="print-grid flex min-h-0 flex-col gap-2">
       <div className="no-print flex flex-wrap items-center gap-2 border border-border bg-card p-2">
         <span className="px-1 text-xs font-medium text-muted-foreground">입력할 표시 선택:</span>
         {FIVE_S_SYMBOLS.filter((s) => s !== '').map((symbol) => (
@@ -138,24 +138,15 @@ export function FiveSGrid({ sheetId, year, month, entries }: FiveSGridProps) {
             <span className="text-xs">{SYMBOL_LABELS[symbol]}</span>
           </Button>
         ))}
-        <Button
-          type="button"
-          size="sm"
-          variant={selectedSymbol === '' ? 'default' : 'outline'}
-          onClick={() => setSelectedSymbol('')}
-          className="h-8 gap-1.5 px-2.5"
-        >
-          <EraserIcon className="size-3.5" />
-          지우개
-        </Button>
 
-        {isCurrentMonth && adminOpen && (
+        <div className="ml-auto flex items-center gap-2">
+          {isCurrentMonth && adminOpen && (
           <Button
             type="button"
             size="sm"
             variant="secondary"
             onClick={() => handleBulkFill(todayDay)}
-            className="ml-auto h-8 gap-1.5 px-2.5"
+            className="h-8 gap-1.5 px-2.5"
           >
             <CheckCheckIcon className="size-3.5" />
             오늘({todayDay}일)까지 {selectedSymbol || '선택표시'} 일괄체크
@@ -181,7 +172,7 @@ export function FiveSGrid({ sheetId, year, month, entries }: FiveSGridProps) {
                 type="button"
                 size="sm"
                 variant="outline"
-                className={cn('h-8 gap-1.5 px-2.5 text-destructive hover:text-destructive', !isCurrentMonth && 'ml-auto')}
+                className="h-8 gap-1.5 px-2.5 text-destructive hover:text-destructive"
               />
             }
           >
@@ -205,7 +196,8 @@ export function FiveSGrid({ sheetId, year, month, entries }: FiveSGridProps) {
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
+          </AlertDialog>
+        </div>
       </div>
       <p className="no-print px-1 text-xs text-muted-foreground">
         위에서 표시를 선택한 뒤 칸을 클릭하면 바로 입력됩니다. 같은 표시를 다시 클릭하면 지워집니다.
