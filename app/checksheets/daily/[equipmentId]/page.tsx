@@ -11,8 +11,10 @@ import { YearMonthPicker } from '@/components/year-month-picker'
 import { ApprovalBox } from '@/components/approval-box'
 import { PrintButton } from '@/components/print-button'
 import { DailyCheckGrid } from '@/components/daily-check-grid'
+import { InspectorManagerCard } from '@/components/inspector-manager-card'
 import { EmergencyActionCard } from '@/components/emergency-action-card'
 import { currentYearMonth } from '@/lib/date-utils'
+import { cn } from '@/lib/utils'
 
 export default async function DailyCheckDetailPage({
   params,
@@ -79,21 +81,29 @@ export default async function DailyCheckDetailPage({
         </div>
 
         {photos.length > 0 && (
-          <div className="no-print print-sheet flex flex-wrap gap-3 border border-border bg-card p-4">
-            {photos.map((photo) => (
-              <figure key={photo.id} className="flex w-32 flex-col gap-1">
-                <img
-                  src={photo.url || '/placeholder.svg'}
-                  alt={photo.label || equip.name}
-                  className="aspect-square w-full rounded-md border border-border object-cover"
-                />
-                <figcaption className="text-center text-xs text-muted-foreground">{photo.label}</figcaption>
-              </figure>
-            ))}
+          <div className="print-sheet flex flex-wrap items-start gap-3 border border-border bg-card p-4">
+            {photos.map((photo) => {
+              const isOverview = photo.label === '전체 전경'
+              return (
+                <figure key={photo.id} className={cn('flex flex-col gap-1', isOverview ? 'w-72' : 'w-32')}>
+                  <img
+                    src={photo.url || '/placeholder.svg'}
+                    alt={photo.label || equip.name}
+                    className={cn(
+                      'w-full rounded-md border border-border object-cover',
+                      isOverview ? 'aspect-[16/10]' : 'aspect-square',
+                    )}
+                  />
+                  <figcaption className="text-center text-xs text-muted-foreground">{photo.label}</figcaption>
+                </figure>
+              )
+            })}
           </div>
         )}
 
         <DailyCheckGrid sheetId={sheet.id} year={year} month={month} items={items} entries={entries} />
+
+        <InspectorManagerCard equipment={equip} />
 
         <EmergencyActionCard equipmentId={equipId} equipment={equip} rows={emergencyActions} />
       </main>

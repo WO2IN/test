@@ -27,6 +27,10 @@ export function CheckItemEditor({ items, onChange }: CheckItemEditorProps) {
     setDraft({ content: '', method: '육안', cycle: '일' })
   }
 
+  function handleDraftContentBlur() {
+    if (draft.content.trim()) handleAdd()
+  }
+
   function handleUpdate(id: number, field: 'content' | 'method' | 'cycle', value: string) {
     onChange(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
   }
@@ -96,6 +100,7 @@ export function CheckItemEditor({ items, onChange }: CheckItemEditorProps) {
               <Input
                 value={draft.content}
                 onChange={(e) => setDraft((d) => ({ ...d, content: e.target.value }))}
+                onBlur={handleDraftContentBlur}
                 placeholder="새 점검 항목 내용"
                 className="h-8"
               />

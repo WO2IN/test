@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { PlusIcon, XIcon, Loader2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { addEquipmentPhoto, deleteEquipmentPhoto } from '@/app/actions/equipment'
 
 export interface EquipmentPhoto {
@@ -17,11 +18,13 @@ interface PhotoUploaderProps {
   equipmentId: number
   photos: EquipmentPhoto[]
   label: string
+  size?: 'default' | 'large'
 }
 
-export function PhotoUploader({ equipmentId, photos, label }: PhotoUploaderProps) {
+export function PhotoUploader({ equipmentId, photos, label, size = 'default' }: PhotoUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const boxClass = size === 'large' ? 'h-40 w-64' : 'size-24'
 
   async function handleFile(file: File) {
     setUploading(true)
@@ -49,7 +52,7 @@ export function PhotoUploader({ equipmentId, photos, label }: PhotoUploaderProps
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <div className="flex flex-wrap gap-2">
         {photos.map((photo) => (
-          <div key={photo.id} className="group relative size-24 overflow-hidden rounded-md border border-border">
+          <div key={photo.id} className={cn('group relative overflow-hidden rounded-md border border-border', boxClass)}>
             <Image src={photo.url || '/placeholder.svg'} alt={label} fill className="object-cover" />
             <button
               type="button"
@@ -64,7 +67,10 @@ export function PhotoUploader({ equipmentId, photos, label }: PhotoUploaderProps
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="flex size-24 flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border text-muted-foreground hover:bg-accent/30"
+          className={cn(
+            'flex flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border text-muted-foreground hover:bg-accent/30',
+            boxClass,
+          )}
         >
           {uploading ? <Loader2Icon className="size-4 animate-spin" /> : <PlusIcon className="size-4" />}
           <span className="text-xs">사진 추가</span>

@@ -68,7 +68,7 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
               <CardTitle>설비 사진</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <PhotoUploader equipmentId={equipmentId} photos={overviewPhotos} label={OVERVIEW_LABEL} />
+              <PhotoUploader equipmentId={equipmentId} photos={overviewPhotos} label={OVERVIEW_LABEL} size="large" />
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
                 {PART_LABELS.map((label) => (
                   <PhotoUploader

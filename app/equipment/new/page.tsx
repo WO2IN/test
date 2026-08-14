@@ -13,8 +13,7 @@ import { Input } from '@/components/ui/input'
 import { PhotoStageUploader } from '@/components/photo-stage-uploader'
 import { CheckItemEditor, type DraftCheckItem } from '@/components/check-item-editor'
 import { InspectorManagerFields, EMPTY_INSPECTOR_MANAGER_VALUE, type InspectorManagerValue } from '@/components/inspector-manager-fields'
-import { IssueLogTable } from '@/components/issue-log-table'
-import { EscalationNoteField } from '@/components/escalation-note-field'
+import { EmergencyFlowTable } from '@/components/emergency-flow-table'
 import {
   createEquipment,
   addEquipmentPhoto,
@@ -174,7 +173,7 @@ export default function NewEquipmentPage() {
               <CardTitle>설비 사진</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <PhotoStageUploader label={OVERVIEW_LABEL} file={overviewPhoto} onChange={setOverviewPhoto} />
+              <PhotoStageUploader label={OVERVIEW_LABEL} file={overviewPhoto} onChange={setOverviewPhoto} size="large" />
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
                 {PART_LABELS.map((label) => (
                   <PhotoStageUploader
@@ -197,17 +196,7 @@ export default function NewEquipmentPage() {
 
               <InspectorManagerFields value={inspectorManager} onChange={setInspectorManager} />
 
-              <IssueLogTable
-                title="이상발생시 조치사항 (FLOW)"
-                columns={[
-                  { key: 'emergencyType', label: '이상 유형', width: '16%' },
-                  { key: 'emergencyAction', label: '응급조치사항', width: '18%' },
-                  { key: 'occurredDate', label: '발생 일자', width: '11%' },
-                  { key: 'cause', label: '고장 원인', width: '20%' },
-                  { key: 'action', label: '조치 내용', width: '20%' },
-                  { key: 'processedDate', label: '처리 일자', width: '10%' },
-                  { key: 'note', label: '비고', width: '5%' },
-                ]}
+              <EmergencyFlowTable
                 rows={emergencyRows}
                 onAdd={async () => {
                   setEmergencyRows((rows) => [...rows, { id: Date.now() }])
@@ -218,9 +207,9 @@ export default function NewEquipmentPage() {
                 onDelete={async (id) => {
                   setEmergencyRows((rows) => rows.filter((row) => row.id !== id))
                 }}
+                escalationNote={escalationNote}
+                onEscalationChange={setEscalationNote}
               />
-
-              <EscalationNoteField value={escalationNote} onChange={setEscalationNote} />
             </CardContent>
           </Card>
 

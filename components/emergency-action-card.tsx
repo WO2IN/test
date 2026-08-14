@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { IssueLogTable } from '@/components/issue-log-table'
-import { EscalationNoteField } from '@/components/escalation-note-field'
+import { EmergencyFlowTable } from '@/components/emergency-flow-table'
 import {
   createEquipmentEmergencyAction,
   updateEquipmentEmergencyAction,
@@ -38,28 +37,14 @@ export function EmergencyActionCard({ equipmentId, equipment, rows }: EmergencyA
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <IssueLogTable
-        title="이상발생시 조치사항 (FLOW)"
-        columns={[
-          { key: 'emergencyType', label: '이상 유형', width: '16%' },
-          { key: 'emergencyAction', label: '응급조치사항', width: '18%' },
-          { key: 'occurredDate', label: '발생 일자', width: '11%' },
-          { key: 'cause', label: '고장 원인', width: '20%' },
-          { key: 'action', label: '조치 내용', width: '20%' },
-          { key: 'processedDate', label: '처리 일자', width: '10%' },
-          { key: 'note', label: '비고', width: '5%' },
-        ]}
-        rows={rows}
-        onAdd={handleAdd}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-      />
-      <EscalationNoteField
-        value={escalationNote}
-        onChange={setEscalationNote}
-        onCommit={(value) => updateEquipment(equipmentId, { escalationNote: value })}
-      />
-    </div>
+    <EmergencyFlowTable
+      rows={rows}
+      onAdd={handleAdd}
+      onUpdate={handleUpdate}
+      onDelete={handleDelete}
+      escalationNote={escalationNote}
+      onEscalationChange={setEscalationNote}
+      onEscalationCommit={(value) => updateEquipment(equipmentId, { escalationNote: value })}
+    />
   )
 }
