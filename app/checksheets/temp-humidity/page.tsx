@@ -2,18 +2,14 @@ import {
   getOrCreateTempHumiditySheet,
   getTempHumidityEntries,
   updateTempHumiditySheetFields,
-  getTempHumidityIssues,
-  addTempHumidityIssue,
-  updateTempHumidityIssue,
-  deleteTempHumidityIssue,
 } from '@/app/actions/temp-humidity'
 import { SiteHeader } from '@/components/site-header'
 import { YearMonthPicker } from '@/components/year-month-picker'
 import { ApprovalBox } from '@/components/approval-box'
+import { RemarksField } from '@/components/remarks-field'
 import { PrintButton } from '@/components/print-button'
 import { TempHumidityTable } from '@/components/temp-humidity-table'
 import { TempHumidityChart } from '@/components/temp-humidity-chart'
-import { IssueLogTable } from '@/components/issue-log-table'
 import { currentYearMonth } from '@/lib/date-utils'
 
 export default async function TempHumidityPage({
@@ -27,38 +23,28 @@ export default async function TempHumidityPage({
   const month = params.month ? Number(params.month) : curMonth
 
   const sheet = await getOrCreateTempHumiditySheet(year, month)
-  const [entries, issues] = await Promise.all([getTempHumidityEntries(sheet.id), getTempHumidityIssues(sheet.id)])
+  const entries = await getTempHumidityEntries(sheet.id)
 
   async function saveApproval(fields: { writer?: string; reviewer?: string; approver?: string }) {
     'use server'
     await updateTempHumiditySheetFields(sheet.id, fields)
   }
 
-  async function handleAddIssue() {
+  async function saveRemarks(value: string) {
     'use server'
-    await addTempHumidityIssue(sheet.id)
-  }
-
-  async function handleUpdateIssue(id: number, fields: Record<string, string>) {
-    'use server'
-    await updateTempHumidityIssue(id, fields)
-  }
-
-  async function handleDeleteIssue(id: number) {
-    'use server'
-    await deleteTempHumidityIssue(id)
+    await updateTempHumiditySheetFields(sheet.id, { remarks: value })
   }
 
   return (
     <div className="temp-humidity-page min-h-dvh bg-background">
       <SiteHeader active="/checksheets/temp-humidity" />
-      <main className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-6 sm:px-6">
+      <main className="print-page mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-6 sm:px-6">
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
           <YearMonthPicker year={year} month={month} />
           <PrintButton />
         </div>
 
-        <div className="flex flex-wrap items-start justify-between gap-4 border border-border bg-card p-4">
+        <div className="print-compact-box flex flex-wrap items-start justify-between gap-4 border border-border bg-card p-4">
           <div className="flex flex-1 items-start gap-3">
             <img
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%ED%9A%8C%EC%82%AC%EB%A1%9C%EA%B3%A0_%ED%88%AC%EB%AA%85-kdSjzuFUF1A1rzO914B2j1jjYSWH4Z.png"
@@ -80,23 +66,14 @@ export default async function TempHumidityPage({
           />
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="temp-humidity-body flex min-h-0 flex-1 flex-col gap-4">
           <TempHumidityChart year={year} month={month} entries={entries} />
           <TempHumidityTable sheetId={sheet.id} year={year} month={month} entries={entries} />
         </div>
 
-        <IssueLogTable
-          columns={[
-            { key: 'occurredDate', label: '발생 일자', width: '15%' },
-            { key: 'content', label: '발생 내용', width: '35%' },
-            { key: 'action', label: '조치 내용', width: '35%' },
-            { key: 'note', label: '비고', width: '15%' },
-          ]}
-          rows={issues}
-          onAdd={handleAddIssue}
-          onUpdate={handleUpdateIssue}
-          onDelete={handleDeleteIssue}
-        />
+        <div className="print-compact-box border border-border bg-card p-4">
+          <RemarksField defaultValue={sheet.remarks ?? ''} onSave={saveRemarks} />
+        </div>
       </main>
     </div>
   )

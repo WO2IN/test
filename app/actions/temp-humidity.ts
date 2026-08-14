@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { findOne, insertRow, removeWhere, selectWhere, updateById, updateWhere } from "@/lib/local-store"
+import { findOne, insertRow, removeWhere, selectWhere, updateById } from "@/lib/local-store"
 
 export async function getOrCreateTempHumiditySheet(year: number, month: number) {
   const existing = findOne("tempHumiditySheets", (s: any) => s.year === year && s.month === month)
@@ -10,6 +10,7 @@ export async function getOrCreateTempHumiditySheet(year: number, month: number) 
   return insertRow("tempHumiditySheets", {
     year,
     month,
+    remarks: null,
     writer: null,
     reviewer: null,
     approver: null,
@@ -65,39 +66,8 @@ export async function clearTempHumidityEntries(sheetId: number) {
 
 export async function updateTempHumiditySheetFields(
   sheetId: number,
-  fields: { writer?: string; reviewer?: string; approver?: string },
+  fields: { remarks?: string; writer?: string; reviewer?: string; approver?: string },
 ) {
   updateById("tempHumiditySheets", sheetId, fields)
-  revalidatePath("/checksheets/temp-humidity")
-}
-
-export async function getTempHumidityIssues(sheetId: number) {
-  return selectWhere("tempHumidityIssues", (i: any) => i.sheetId === sheetId).sort(
-    (a: any, b: any) => a.id - b.id,
-  )
-}
-
-export async function addTempHumidityIssue(sheetId: number) {
-  insertRow("tempHumidityIssues", {
-    sheetId,
-    occurredDate: null,
-    content: null,
-    action: null,
-    note: null,
-    createdAt: new Date().toISOString(),
-  })
-  revalidatePath("/checksheets/temp-humidity")
-}
-
-export async function updateTempHumidityIssue(
-  id: number,
-  fields: { occurredDate?: string; content?: string; action?: string; note?: string },
-) {
-  updateWhere("tempHumidityIssues", (i: any) => i.id === id, fields)
-  revalidatePath("/checksheets/temp-humidity")
-}
-
-export async function deleteTempHumidityIssue(id: number) {
-  removeWhere("tempHumidityIssues", (i: any) => i.id === id)
   revalidatePath("/checksheets/temp-humidity")
 }

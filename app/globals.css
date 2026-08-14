@@ -176,17 +176,17 @@
   .temp-humidity-page {
     min-height: 100vh !important;
   }
-  .temp-humidity-page main {
-    max-width: none !important;
-    height: 100vh !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    padding: 0 !important;
-  }
   .temp-humidity-page .print-sheet,
-  .temp-humidity-page .temp-humidity-chart,
-  .temp-humidity-page .print-issue-table {
+  .temp-humidity-page .temp-humidity-chart {
     break-inside: avoid;
+  }
+  .temp-humidity-page .temp-humidity-body {
+    display: grid !important;
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    gap: 4px !important;
   }
   .temp-humidity-page table {
     font-size: 10px !important;
@@ -201,19 +201,36 @@
     font-size: 10px !important;
   }
   .temp-humidity-page .temp-humidity-chart {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 0 !important;
     padding: 10px !important;
     gap: 6px !important;
-    flex: 2 1 auto !important;
   }
-  .temp-humidity-page .temp-humidity-chart [class*="aspect"] {
+  .temp-humidity-page .temp-humidity-chart > [data-slot="chart"] {
+    flex: 1 1 0 !important;
     height: 100% !important;
-    min-height: 320px !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    aspect-ratio: auto !important;
   }
-  .temp-humidity-page .temp-humidity-chart svg {
+  .temp-humidity-page .temp-humidity-chart > [data-slot="chart"] > div:not([data-chart]) {
+    height: 100% !important;
+    min-height: 0 !important;
+    width: 100% !important;
+  }
+  .temp-humidity-page .temp-humidity-chart svg,
+  .temp-humidity-page .temp-humidity-chart > [data-slot="chart"] > div {
+    height: 100% !important;
     max-height: none !important;
+  }
+  .temp-humidity-page .temp-humidity-table-wrap {
+    min-height: 0 !important;
   }
   .temp-humidity-page .print-sheet {
     overflow: visible !important;
+    min-height: 0 !important;
   }
   .temp-humidity-page .print-only {
     display: table !important;
@@ -224,23 +241,6 @@
   .temp-humidity-page .print-only th,
   .temp-humidity-page .print-only td {
     padding: 5px 4px !important;
-    font-size: 10px !important;
-  }
-  .temp-humidity-page .temp-humidity-chart + .print-sheet {
-    margin-top: 0 !important;
-  }
-  .temp-humidity-page .temp-humidity-chart {
-    order: 1;
-  }
-  .temp-humidity-page .print-sheet {
-    order: 2;
-  }
-  .temp-humidity-page .print-issue-table {
-    order: 3;
-    flex: 1 1 auto !important;
-  }
-  .temp-humidity-page .print-issue-table table {
-    height: 100% !important;
     font-size: 10px !important;
   }
   html,
@@ -266,12 +266,13 @@
   }
   .print-page {
     min-height: calc(100vh - 8mm) !important;
-    gap: 10px !important;
+    height: calc(100vh - 8mm) !important;
+    gap: 6px !important;
     padding: 0 !important;
   }
   .print-page > .print-compact-box:last-child {
-    margin-top: 10px !important;
-    flex: 0 1 auto !important;
+    margin-top: 4px !important;
+    flex: 0 0 auto !important;
   }
   .print-page > .print-sheet {
     flex: 1 1 0 !important;
@@ -322,7 +323,7 @@
   }
   .print-sheet {
     box-shadow: none !important;
-    border: 1px solid black !important;
+    border: 1.5px solid #000 !important;
     overflow: visible !important;
   }
   .print-sheet table {
@@ -332,6 +333,19 @@
   .print-sheet th,
   .print-sheet td {
     padding: 0 !important;
+  }
+  .print-page table,
+  .print-page th,
+  .print-page td,
+  .print-page .print-compact-box {
+    border-color: #000 !important;
+  }
+  .print-page table {
+    border: 1.5px solid #000 !important;
+  }
+  .print-page th,
+  .print-page td {
+    border-width: 1.5px !important;
   }
   .print-day-cell {
     height: 15px !important;

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
-import { getDayRange, isWeekend, dayOfWeekLabel } from '@/lib/date-utils'
+import { getDayRange, isWeekend } from '@/lib/date-utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { bulkUpsertTempHumidityEntries, upsertTempHumidityEntry, clearTempHumidityEntries } from '@/app/actions/temp-humidity'
@@ -38,7 +38,7 @@ type Cell = { day: number; field: Field }
 
 function randomInRange(min: number, max: number): string {
   if (min > max) [min, max] = [max, min]
-  return (min + Math.random() * (max - min)).toFixed(1)
+  return String(Math.round(min + Math.random() * (max - min)))
 }
 
 export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidityTableProps) {
@@ -159,7 +159,7 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="temp-humidity-table-wrap flex flex-col gap-2">
       <div className="no-print flex flex-col gap-2 border border-border bg-card p-2">
         <div className="flex flex-wrap items-center gap-2">
           {isCurrentMonth && adminOpen && <Button type="button" size="sm" variant="outline" onClick={fillUpToToday} className="h-8 gap-1.5 px-2.5"><CalendarCheck2Icon data-icon="inline-start" />오늘({todayDay}일)까지 채우기</Button>}
@@ -206,15 +206,30 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
       </div>
 
       <div className="print-sheet overflow-x-auto border border-border" onPointerUp={() => setDragging(false)}>
-        <table className="no-print w-full border-collapse text-xs select-none">
-          <thead><tr><th className="w-10 border-r border-b border-border bg-muted p-1.5 text-sm font-medium">일자</th><th className="w-10 border-r border-b border-border bg-muted p-1.5 text-sm font-medium">요일</th><th className="w-20 border-r border-b border-border bg-muted p-1.5 text-sm font-medium">온도(℃)</th><th className="w-20 border-r border-b border-border bg-muted p-1.5 text-sm font-medium">습도(%)</th><th className="w-24 border-b border-border bg-muted p-1.5 text-sm font-medium">점검자</th></tr></thead>
-          <tbody>{days.map((day) => { const entry = optimisticEntries.get(day); const weekend = isWeekend(year, month, day); return <tr key={day} className={cn(weekend && 'weekend-cell bg-muted-foreground/5')}>
-            <td className="border-r border-b border-border p-1.5 text-center font-medium">{day}</td><td className="border-r border-b border-border p-1.5 text-center text-muted-foreground">{dayOfWeekLabel(year, month, day)}</td>
-            {(['temperature', 'humidity'] as Field[]).map((field) => <td key={field} className={cn('border-r border-b border-border p-0', isSelected(day, field) && 'bg-primary/20 ring-2 ring-inset ring-primary')} onPointerDown={() => { setDragging(true); setSelectionStart({ day, field }); setSelectionEnd({ day, field }) }} onPointerEnter={() => dragging && selectCell({ day, field })}>
-              <Input aria-label={`${day}일 ${field === 'temperature' ? '온도' : '습도'}`} type="number" step="0.1" defaultValue={entry?.[field] ?? ''} key={`${field}-${day}-${entry?.[field] ?? ''}`} onBlur={(e) => handleBlur(day, field, e.target.value)} className="h-8 rounded-none border-0 text-center shadow-none focus-visible:ring-0" />
-            </td>)}
-            <td className="border-b border-border p-0"><Input aria-label={`${day}일 점검자`} defaultValue={entry?.checker ?? ''} key={`checker-${day}-${entry?.checker ?? ''}`} onBlur={(e) => handleBlur(day, 'checker', e.target.value)} className="h-8 rounded-none border-0 text-center shadow-none focus-visible:ring-0" /></td>
-          </tr> })}</tbody>
+        <table className="no-print min-w-[900px] w-full border-collapse text-xs select-none">
+          <thead>
+            <tr>
+              <th className="w-20 border-r border-b border-border bg-muted p-1.5 text-left text-xs font-medium">구분</th>
+              {days.map((day) => <th key={day} className={cn('min-w-7 border-r border-b border-border bg-muted p-1 text-center text-xs font-medium', isWeekend(year, month, day) && 'weekend-cell')}>{day}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {(['temperature', 'humidity'] as Field[]).map((field) => (
+              <tr key={field}>
+                <th className="border-r border-b border-border bg-muted p-1.5 text-left text-xs font-medium">{field === 'temperature' ? '온도(℃)' : '습도(%)'}</th>
+                {days.map((day) => {
+                  const entry = optimisticEntries.get(day)
+                  return <td key={day} className={cn('border-r border-b border-border p-0', isSelected(day, field) && 'bg-primary/20 ring-2 ring-inset ring-primary')} onPointerDown={() => { setDragging(true); setSelectionStart({ day, field }); setSelectionEnd({ day, field }) }} onPointerEnter={() => dragging && selectCell({ day, field })}>
+                    <Input aria-label={`${day}일 ${field === 'temperature' ? '온도' : '습도'}`} type="number" step="0.1" defaultValue={entry?.[field] ?? ''} key={`${field}-${day}-${entry?.[field] ?? ''}`} onBlur={(e) => handleBlur(day, field, e.target.value)} className="h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0" />
+                  </td>
+                })}
+              </tr>
+            ))}
+            <tr>
+              <th className="border-r border-b border-border bg-muted p-1.5 text-left text-xs font-medium">점검자</th>
+              {days.map((day) => <td key={day} className="border-r border-b border-border p-0"><Input aria-label={`${day}일 점검자`} defaultValue={optimisticEntries.get(day)?.checker ?? ''} key={`checker-${day}-${optimisticEntries.get(day)?.checker ?? ''}`} onBlur={(e) => handleBlur(day, 'checker', e.target.value)} className="h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0" /></td>)}
+            </tr>
+          </tbody>
         </table>
         <table className="print-only w-full border-collapse text-[7px]">
           <thead><tr><th className="border border-border bg-muted px-1 py-0.5 text-left">구분</th>{days.map((day) => <th key={day} className="border border-border bg-muted px-0.5 py-0.5 text-center">{day}</th>)}</tr></thead>

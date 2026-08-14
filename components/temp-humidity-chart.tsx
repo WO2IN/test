@@ -34,7 +34,7 @@ export function TempHumidityChart({ year, month, entries }: TempHumidityChartPro
         <h2 className="text-sm font-semibold">온/습도 추이</h2>
         <p className="text-xs text-muted-foreground">관리기준: 온도 20±10℃ (LCL 10 / UCL 30) · 습도 60% 이하 (UCL 60)</p>
       </div>
-      <ChartContainer config={chartConfig} className="aspect-auto h-72 w-full">
+      <ChartContainer config={chartConfig} className="aspect-auto h-[420px] min-h-0 w-full lg:h-[460px]">
         <LineChart data={data} margin={{ left: 4, right: 12, top: 8, bottom: 0 }}>
           <CartesianGrid vertical={false} />
           <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
