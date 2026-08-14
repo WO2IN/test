@@ -34,14 +34,21 @@ export function TempHumidityChart({ year, month, entries }: TempHumidityChartPro
         <h2 className="text-sm font-semibold">온/습도 추이</h2>
         <p className="text-xs text-muted-foreground">관리기준: 온도 20±10℃ (LCL 10 / UCL 30) · 습도 60% 이하 (UCL 60)</p>
       </div>
-      <ChartContainer config={chartConfig} className="aspect-auto h-[420px] min-h-0 w-full lg:h-[460px]">
+      <ChartContainer config={chartConfig} className="aspect-auto h-[520px] min-h-0 w-full lg:h-[600px]">
         <LineChart data={data} margin={{ left: 4, right: 12, top: 8, bottom: 0 }}>
           <CartesianGrid vertical={false} />
           <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
-          <YAxis tickLine={false} axisLine={false} tickMargin={8} width={32} />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            width={32}
+            domain={[0, 70]}
+            ticks={[0, 10, 20, 30, 40, 50, 60, 70]}
+          />
           <ChartTooltip content={<ChartTooltipContent />} />
           <ReferenceLine y={30} stroke="var(--chart-1)" strokeDasharray="4 4" label={{ value: 'UCL 30', position: 'insideTopRight', fontSize: 11, fill: 'var(--chart-1)' }} />
-          <ReferenceLine y={10} stroke="var(--chart-1)" strokeDasharray="4 4" label={{ value: 'LCL 10', position: 'insideBottomRight', fontSize: 11, fill: 'var(--chart-1)' }} />
+          <ReferenceLine y={10} stroke="var(--chart-1)" strokeDasharray="4 4" label={{ value: 'LCL 10 ', position: 'insideBottomRight', fontSize: 11, fill: 'var(--chart-1)' }} />
           <ReferenceLine y={60} stroke="var(--chart-2)" strokeDasharray="4 4" label={{ value: 'UCL 60', position: 'insideTopRight', fontSize: 11, fill: 'var(--chart-2)' }} />
           <Line
             dataKey="temperature"

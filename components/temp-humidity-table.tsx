@@ -38,7 +38,7 @@ type Cell = { day: number; field: Field }
 
 function randomInRange(min: number, max: number): string {
   if (min > max) [min, max] = [max, min]
-  return String(Math.round(min + Math.random() * (max - min)))
+  return Math.round(min + Math.random() * (max - min)).toString()
 }
 
 export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidityTableProps) {
@@ -182,7 +182,7 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
               <AlertDialogHeader>
                 <AlertDialogTitle>이번 달 온/습도 내용을 모두 지울까요?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  {year}년 {month}월 온/습도 체크시트에 입력된 온도, 습도, 점검자 ���이 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                  {year}년 {month}월 온/습도 체크시트에 입력된 온도, 습도, 점검자 값이 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다. 
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -199,8 +199,8 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
         </div>
         {adminOpen && <div className="flex flex-wrap items-center gap-3 border-t border-border pt-2">
           <span className="text-xs font-medium">난수 범위</span>
-          <label className="flex items-center gap-1 text-xs">온도 <Input aria-label="온도 최솟값" type="number" step="0.1" value={tempMin} onChange={(e) => setTempMin(e.target.value)} className="h-8 w-16 text-center" />~<Input aria-label="온도 최댓값" type="number" step="0.1" value={tempMax} onChange={(e) => setTempMax(e.target.value)} className="h-8 w-16 text-center" /></label>
-          <label className="flex items-center gap-1 text-xs">습도 <Input aria-label="습도 최솟값" type="number" step="0.1" value={humidityMin} onChange={(e) => setHumidityMin(e.target.value)} className="h-8 w-16 text-center" />~<Input aria-label="습도 최댓값" type="number" step="0.1" value={humidityMax} onChange={(e) => setHumidityMax(e.target.value)} className="h-8 w-16 text-center" /></label>
+          <label className="flex items-center gap-1 text-xs">온도 <Input aria-label="온도 최솟값" type="number" step="1" value={tempMin} onChange={(e) => setTempMin(e.target.value)} className="h-8 w-16 text-center" />~<Input aria-label="온도 최댓값" type="number" step="1" value={tempMax} onChange={(e) => setTempMax(e.target.value)} className="h-8 w-16 text-center" /></label>
+          <label className="flex items-center gap-1 text-xs">습도 <Input aria-label="습도 최솟값" type="number" step="1" value={humidityMin} onChange={(e) => setHumidityMin(e.target.value)} className="h-8 w-16 text-center" />~<Input aria-label="습도 최댓값" type="number" step="1" value={humidityMax} onChange={(e) => setHumidityMax(e.target.value)} className="h-8 w-16 text-center" /></label>
           <Button type="button" size="sm" onClick={fillSelectedEmptyCells} disabled={!selectionStart} className="h-8 gap-1.5"><DicesIcon data-icon="inline-start" />선택 범위 빈 셀 채우기</Button>
         </div>}
       </div>
@@ -220,7 +220,7 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
                 {days.map((day) => {
                   const entry = optimisticEntries.get(day)
                   return <td key={day} className={cn('border-r border-b border-border p-0', isSelected(day, field) && 'bg-primary/20 ring-2 ring-inset ring-primary')} onPointerDown={() => { setDragging(true); setSelectionStart({ day, field }); setSelectionEnd({ day, field }) }} onPointerEnter={() => dragging && selectCell({ day, field })}>
-                    <Input aria-label={`${day}일 ${field === 'temperature' ? '온도' : '습도'}`} type="number" step="0.1" defaultValue={entry?.[field] ?? ''} key={`${field}-${day}-${entry?.[field] ?? ''}`} onBlur={(e) => handleBlur(day, field, e.target.value)} className="h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0" />
+                    <Input aria-label={`${day}일 ${field === 'temperature' ? '온도' : '습도'}`} type="number" step="1" defaultValue={entry?.[field] ?? ''} key={`${field}-${day}-${entry?.[field] ?? ''}`} onBlur={(e) => handleBlur(day, field, e.target.value)} className="h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0" />
                   </td>
                 })}
               </tr>
