@@ -1,8 +1,9 @@
+import Link from 'next/link'
 import { SiteHeader } from '@/components/site-header'
-import { EquipmentFormDialog } from '@/components/equipment-form-dialog'
 import { EquipmentCard } from '@/components/equipment-card'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
-import { FactoryIcon } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
+import { FactoryIcon, PlusIcon } from 'lucide-react'
 import { getEquipmentList } from '@/app/actions/equipment'
 
 export default async function EquipmentPage() {
@@ -19,7 +20,10 @@ export default async function EquipmentPage() {
               설비 정보와 사진, 일상점검 항목 템플릿을 관리합니다.
             </p>
           </div>
-          <EquipmentFormDialog />
+          <Link href="/equipment/new" className={buttonVariants({ variant: 'default' })}>
+            <PlusIcon data-icon="inline-start" />
+            설비 등록
+          </Link>
         </div>
 
         {list.length === 0 ? (

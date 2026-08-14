@@ -1,20 +1,17 @@
 import { notFound } from 'next/navigation'
-import { getEquipmentById, getEquipmentPhotos, getDailyCheckItems } from '@/app/actions/equipment'
 import {
-  getOrCreateDailyCheckSheet,
-  getDailyCheckEntries,
-  updateDailyCheckSheetFields,
-  getDailyCheckIssues,
-  addDailyCheckIssue,
-  updateDailyCheckIssue,
-  deleteDailyCheckIssue,
-} from '@/app/actions/daily-check'
+  getEquipmentById,
+  getEquipmentPhotos,
+  getDailyCheckItems,
+  getEquipmentEmergencyActions,
+} from '@/app/actions/equipment'
+import { getOrCreateDailyCheckSheet, getDailyCheckEntries, updateDailyCheckSheetFields } from '@/app/actions/daily-check'
 import { SiteHeader } from '@/components/site-header'
 import { YearMonthPicker } from '@/components/year-month-picker'
 import { ApprovalBox } from '@/components/approval-box'
 import { PrintButton } from '@/components/print-button'
 import { DailyCheckGrid } from '@/components/daily-check-grid'
-import { IssueLogTable } from '@/components/issue-log-table'
+import { EmergencyActionCard } from '@/components/emergency-action-card'
 import { currentYearMonth } from '@/lib/date-utils'
 
 export default async function DailyCheckDetailPage({
@@ -34,31 +31,17 @@ export default async function DailyCheckDetailPage({
   const year = sp.year ? Number(sp.year) : curYear
   const month = sp.month ? Number(sp.month) : curMonth
 
-  const [photos, items, sheet] = await Promise.all([
+  const [photos, items, sheet, emergencyActions] = await Promise.all([
     getEquipmentPhotos(equipId),
     getDailyCheckItems(equipId),
     getOrCreateDailyCheckSheet(equipId, year, month),
+    getEquipmentEmergencyActions(equipId),
   ])
-  const [entries, issues] = await Promise.all([getDailyCheckEntries(sheet.id), getDailyCheckIssues(sheet.id)])
+  const entries = await getDailyCheckEntries(sheet.id)
 
   async function saveApproval(fields: { writer?: string; reviewer?: string; approver?: string }) {
     'use server'
     await updateDailyCheckSheetFields(sheet.id, fields)
-  }
-
-  async function handleAddIssue() {
-    'use server'
-    await addDailyCheckIssue(sheet.id)
-  }
-
-  async function handleUpdateIssue(id: number, fields: Record<string, string>) {
-    'use server'
-    await updateDailyCheckIssue(id, fields)
-  }
-
-  async function handleDeleteIssue(id: number) {
-    'use server'
-    await deleteDailyCheckIssue(id)
   }
 
   return (
@@ -71,14 +54,21 @@ export default async function DailyCheckDetailPage({
         </div>
 
         <div className="print-compact-box flex flex-wrap items-start justify-between gap-4 border border-border bg-card p-4">
-          <div className="flex flex-1 flex-col gap-1">
-            <h1 className="text-balance text-xl font-semibold">
-              {year}년 {month}월 설비 일상점검 체크시트
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              점검부서: {sheet.department || equip.department || '-'} · 담당자: {sheet.manager || equip.manager || '-'} · 설비명:{' '}
-              {equip.name}
-            </p>
+          <div className="flex flex-1 items-start gap-3">
+            <img
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%ED%9A%8C%EC%82%AC%EB%A1%9C%EA%B3%A0_%ED%88%AC%EB%AA%85-kdSjzuFUF1A1rzO914B2j1jjYSWH4Z.png"
+              alt="WOORI 로고"
+              className="print-logo h-12 w-auto object-contain"
+            />
+            <div className="flex flex-col gap-1">
+              <h1 className="text-balance text-xl font-semibold">
+                {year}년 {month}월 설비 일상점검 체크시트
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                점검부서: {sheet.department || equip.department || '-'} · 담당자: {sheet.manager || equip.manager || '-'} · 설비명:{' '}
+                {equip.name}
+              </p>
+            </div>
           </div>
           <ApprovalBox
             writer={sheet.writer}
@@ -105,19 +95,7 @@ export default async function DailyCheckDetailPage({
 
         <DailyCheckGrid sheetId={sheet.id} year={year} month={month} items={items} entries={entries} />
 
-        <IssueLogTable
-          columns={[
-            { key: 'occurredDate', label: '발생 일자', width: '12%' },
-            { key: 'cause', label: '고장 원인', width: '30%' },
-            { key: 'action', label: '조치 내용', width: '38%' },
-            { key: 'processedDate', label: '처리 일자', width: '12%' },
-            { key: 'note', label: '비고', width: '8%' },
-          ]}
-          rows={issues}
-          onAdd={handleAddIssue}
-          onUpdate={handleUpdateIssue}
-          onDelete={handleDeleteIssue}
-        />
+        <EmergencyActionCard equipmentId={equipId} equipment={equip} rows={emergencyActions} />
       </main>
     </div>
   )

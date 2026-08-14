@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { BuildingIcon, MapPinIcon, UserIcon, Trash2Icon } from 'lucide-react'
+import { BuildingIcon, UserIcon, Trash2Icon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,7 +25,6 @@ interface EquipmentCardProps {
     name: string
     department: string | null
     manager: string | null
-    location: string | null
   }
 }
 
@@ -65,12 +64,6 @@ export function EquipmentCard({ equipment }: EquipmentCardProps) {
           <div className="flex items-center gap-2">
             <UserIcon className="size-3.5" />
             {equipment.manager}
-          </div>
-        )}
-        {equipment.location && (
-          <div className="flex items-center gap-2">
-            <MapPinIcon className="size-3.5" />
-            {equipment.location}
           </div>
         )}
       </CardContent>

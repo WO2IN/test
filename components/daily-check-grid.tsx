@@ -4,7 +4,7 @@ import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
 import { getDayRange, isWeekend } from '@/lib/date-utils'
 import { upsertDailyCheckEntry, bulkFillDailyCheckEntries, clearDailyCheckSheetEntries } from '@/app/actions/daily-check'
-import { CheckCheckIcon, EraserIcon, Trash2Icon } from 'lucide-react'
+import { CheckCheckIcon, Trash2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -124,16 +124,6 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
             <span className="text-xs">{SYMBOL_LABELS[symbol]}</span>
           </Button>
         ))}
-        <Button
-          type="button"
-          size="sm"
-          variant={selectedSymbol === '' ? 'default' : 'outline'}
-          onClick={() => setSelectedSymbol('')}
-          className="h-8 gap-1.5 px-2.5"
-        >
-          <EraserIcon className="size-3.5" />
-          지우개
-        </Button>
 
         {isCurrentMonth && (
           <Button

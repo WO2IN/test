@@ -10,17 +10,16 @@ interface EquipmentInfoFormProps {
     name: string
     department: string | null
     manager: string | null
-    location: string | null
   }
 }
 
 export function EquipmentInfoForm({ equipment }: EquipmentInfoFormProps) {
-  function handleBlur(field: 'name' | 'department' | 'manager' | 'location', value: string) {
+  function handleBlur(field: 'name' | 'department' | 'manager', value: string) {
     updateEquipment(equipment.id, { [field]: value })
   }
 
   return (
-    <FieldGroup className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <Field>
         <FieldLabel>설비명</FieldLabel>
         <Input defaultValue={equipment.name} onBlur={(e) => handleBlur('name', e.target.value)} />
@@ -32,10 +31,6 @@ export function EquipmentInfoForm({ equipment }: EquipmentInfoFormProps) {
       <Field>
         <FieldLabel>담당자</FieldLabel>
         <Input defaultValue={equipment.manager ?? ''} onBlur={(e) => handleBlur('manager', e.target.value)} />
-      </Field>
-      <Field>
-        <FieldLabel>위치</FieldLabel>
-        <Input defaultValue={equipment.location ?? ''} onBlur={(e) => handleBlur('location', e.target.value)} />
       </Field>
     </FieldGroup>
   )

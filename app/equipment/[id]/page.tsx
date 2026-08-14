@@ -7,7 +7,14 @@ import { buttonVariants } from '@/components/ui/button'
 import { PhotoUploader } from '@/components/photo-uploader'
 import { EquipmentInfoForm } from '@/components/equipment-info-form'
 import { CheckItemManager } from '@/components/check-item-manager'
-import { getEquipmentById, getEquipmentPhotos, getDailyCheckItems } from '@/app/actions/equipment'
+import { InspectorManagerCard } from '@/components/inspector-manager-card'
+import { EmergencyActionCard } from '@/components/emergency-action-card'
+import {
+  getEquipmentById,
+  getEquipmentPhotos,
+  getDailyCheckItems,
+  getEquipmentEmergencyActions,
+} from '@/app/actions/equipment'
 
 const OVERVIEW_LABEL = '전체 전경'
 const PART_LABELS = ['1', '2', '3', '4', '5', '6', '7']
@@ -18,9 +25,10 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
   const equipment = await getEquipmentById(equipmentId)
   if (!equipment) notFound()
 
-  const [photos, items] = await Promise.all([
+  const [photos, items, emergencyActions] = await Promise.all([
     getEquipmentPhotos(equipmentId),
     getDailyCheckItems(equipmentId),
+    getEquipmentEmergencyActions(equipmentId),
   ])
 
   const overviewPhotos = photos.filter((p) => p.label === OVERVIEW_LABEL)
@@ -78,8 +86,10 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
             <CardHeader>
               <CardTitle>일상점검 항목 템플릿</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-6">
               <CheckItemManager equipmentId={equipmentId} items={items} />
+              <InspectorManagerCard equipment={equipment} />
+              <EmergencyActionCard equipment={equipment} equipmentId={equipmentId} rows={emergencyActions} />
             </CardContent>
           </Card>
         </div>

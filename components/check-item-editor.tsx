@@ -5,50 +5,40 @@ import { PlusIcon, Trash2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { toast } from 'sonner'
-import { createDailyCheckItem, deleteDailyCheckItem, updateDailyCheckItem } from '@/app/actions/equipment'
 
-export interface CheckItem {
+export interface DraftCheckItem {
   id: number
-  itemNo: number
   content: string
-  method: string | null
-  cycle: string | null
+  method: string
+  cycle: string
 }
 
-interface CheckItemManagerProps {
-  equipmentId: number
-  items: CheckItem[]
+interface CheckItemEditorProps {
+  items: DraftCheckItem[]
+  onChange: (items: DraftCheckItem[]) => void
 }
 
-export function CheckItemManager({ equipmentId, items }: CheckItemManagerProps) {
+export function CheckItemEditor({ items, onChange }: CheckItemEditorProps) {
   const [draft, setDraft] = useState({ content: '', method: '육안', cycle: '일' })
-  const [pending, setPending] = useState(false)
 
-  async function handleAdd() {
-    if (!draft.content.trim()) {
-      toast.error('점검 내용을 입력해주세요.')
-      return
-    }
-    setPending(true)
-    try {
-      const nextNo = items.length > 0 ? Math.max(...items.map((i) => i.itemNo)) + 1 : 1
-      await createDailyCheckItem(equipmentId, { itemNo: nextNo, ...draft })
-      setDraft({ content: '', method: '육안', cycle: '일' })
-    } catch (error) {
-      console.error('[v0] add check item error:', error)
-      toast.error('추가에 실패했습니다.')
-    } finally {
-      setPending(false)
+  function handleAdd() {
+    if (!draft.content.trim()) return
+    onChange([...items, { id: Date.now(), content: draft.content, method: draft.method || '육안', cycle: draft.cycle || '일' }])
+    setDraft({ content: '', method: '육안', cycle: '일' })
+  }
+
+  function handleUpdate(id: number, field: 'content' | 'method' | 'cycle', value: string) {
+    onChange(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
+  }
+
+  function handleBlurDefault(id: number, field: 'method' | 'cycle', value: string, fallback: string) {
+    if (!value.trim()) {
+      onChange(items.map((item) => (item.id === id ? { ...item, [field]: fallback } : item)))
     }
   }
 
-  async function handleUpdate(id: number, field: 'content' | 'method' | 'cycle', value: string) {
-    await updateDailyCheckItem(id, equipmentId, { [field]: value })
-  }
-
-  async function handleDelete(id: number) {
-    await deleteDailyCheckItem(id, equipmentId)
+  function handleDelete(id: number) {
+    onChange(items.filter((item) => item.id !== id))
   }
 
   return (
@@ -64,28 +54,30 @@ export function CheckItemManager({ equipmentId, items }: CheckItemManagerProps) 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items.map((item) => (
+          {items.map((item, index) => (
             <TableRow key={item.id}>
-              <TableCell className="text-muted-foreground">{item.itemNo}</TableCell>
+              <TableCell className="text-muted-foreground">{index + 1}</TableCell>
               <TableCell>
                 <Input
-                  defaultValue={item.content}
-                  onBlur={(e) => handleUpdate(item.id, 'content', e.target.value)}
+                  value={item.content}
+                  onChange={(e) => handleUpdate(item.id, 'content', e.target.value)}
                   className="h-8"
                 />
               </TableCell>
               <TableCell>
                 <Input
-                  defaultValue={item.method ?? ''}
-                  onBlur={(e) => handleUpdate(item.id, 'method', e.target.value)}
+                  value={item.method}
+                  onChange={(e) => handleUpdate(item.id, 'method', e.target.value)}
+                  onBlur={(e) => handleBlurDefault(item.id, 'method', e.target.value, '육안')}
                   className="h-8"
                   placeholder="육안"
                 />
               </TableCell>
               <TableCell>
                 <Input
-                  defaultValue={item.cycle ?? ''}
-                  onBlur={(e) => handleUpdate(item.id, 'cycle', e.target.value)}
+                  value={item.cycle}
+                  onChange={(e) => handleUpdate(item.id, 'cycle', e.target.value)}
+                  onBlur={(e) => handleBlurDefault(item.id, 'cycle', e.target.value, '일')}
                   className="h-8"
                   placeholder="일"
                 />
@@ -125,7 +117,7 @@ export function CheckItemManager({ equipmentId, items }: CheckItemManagerProps) 
               />
             </TableCell>
             <TableCell>
-              <Button variant="ghost" size="icon-sm" onClick={handleAdd} disabled={pending}>
+              <Button variant="ghost" size="icon-sm" onClick={handleAdd}>
                 <PlusIcon />
                 <span className="sr-only">추가</span>
               </Button>
