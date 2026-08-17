@@ -321,6 +321,12 @@
   .print-issue-table table {
     font-size: 9px !important;
   }
+  .print-photo-box {
+    flex: 0 0 auto !important;
+    border: 1.5px solid #000 !important;
+    padding: 4px !important;
+    overflow: hidden !important;
+  }
   .print-sheet {
     box-shadow: none !important;
     border: 1.5px solid #000 !important;

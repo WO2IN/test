@@ -13,7 +13,8 @@ import {
   getEquipmentById,
   getEquipmentPhotos,
   getDailyCheckItems,
-  getEquipmentEmergencyActions,
+  getEquipmentEmergencyGuides,
+  getEquipmentEmergencyHistories,
 } from '@/app/actions/equipment'
 
 const OVERVIEW_LABEL = '전체 전경'
@@ -25,10 +26,11 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
   const equipment = await getEquipmentById(equipmentId)
   if (!equipment) notFound()
 
-  const [photos, items, emergencyActions] = await Promise.all([
+  const [photos, items, guides, histories] = await Promise.all([
     getEquipmentPhotos(equipmentId),
     getDailyCheckItems(equipmentId),
-    getEquipmentEmergencyActions(equipmentId),
+    getEquipmentEmergencyGuides(equipmentId),
+    getEquipmentEmergencyHistories(equipmentId),
   ])
 
   const overviewPhotos = photos.filter((p) => p.label === OVERVIEW_LABEL)
@@ -89,7 +91,7 @@ export default async function EquipmentDetailPage({ params }: { params: Promise<
             <CardContent className="flex flex-col gap-6">
               <CheckItemManager equipmentId={equipmentId} items={items} />
               <InspectorManagerCard equipment={equipment} />
-              <EmergencyActionCard equipment={equipment} equipmentId={equipmentId} rows={emergencyActions} />
+              <EmergencyActionCard equipment={equipment} equipmentId={equipmentId} guides={guides} histories={histories} />
             </CardContent>
           </Card>
         </div>

@@ -2,46 +2,71 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { EmergencyFlowTable } from '@/components/emergency-flow-table'
+import { EmergencyFlowTable, EmergencyGuide, EmergencyHistory } from '@/components/emergency-flow-table'
 import {
-  createEquipmentEmergencyAction,
-  updateEquipmentEmergencyAction,
-  deleteEquipmentEmergencyAction,
+  createEquipmentEmergencyGuide,
+  updateEquipmentEmergencyGuide,
+  deleteEquipmentEmergencyGuide,
+  createEquipmentEmergencyHistory,
+  updateEquipmentEmergencyHistory,
+  deleteEquipmentEmergencyHistory,
   updateEquipment,
 } from '@/app/actions/equipment'
 
 interface EmergencyActionCardProps {
   equipmentId: number
   equipment: { escalationNote?: string | null }
-  rows: Array<Record<string, any>>
+  guides: EmergencyGuide[]
+  histories: EmergencyHistory[]
 }
 
-export function EmergencyActionCard({ equipmentId, equipment, rows }: EmergencyActionCardProps) {
+export function EmergencyActionCard({ equipmentId, equipment, guides, histories }: EmergencyActionCardProps) {
   const [escalationNote, setEscalationNote] = useState(equipment.escalationNote ?? '')
 
-  async function handleAdd() {
+  async function handleAddGuide() {
     try {
-      await createEquipmentEmergencyAction(equipmentId, { sortOrder: rows.length })
+      await createEquipmentEmergencyGuide(equipmentId, { sortOrder: guides.length })
     } catch (error) {
-      console.error('[v0] add emergency action error:', error)
+      console.error('[v0] add emergency guide error:', error)
       toast.error('추가에 실패했습니다.')
     }
   }
 
-  async function handleUpdate(id: number, fields: Record<string, string>) {
-    await updateEquipmentEmergencyAction(id, equipmentId, fields)
+  async function handleUpdateGuide(id: number, fields: Record<string, string>) {
+    await updateEquipmentEmergencyGuide(id, equipmentId, fields)
   }
 
-  async function handleDelete(id: number) {
-    await deleteEquipmentEmergencyAction(id, equipmentId)
+  async function handleDeleteGuide(id: number) {
+    await deleteEquipmentEmergencyGuide(id, equipmentId)
+  }
+
+  async function handleAddHistory() {
+    try {
+      await createEquipmentEmergencyHistory(equipmentId, { sortOrder: histories.length })
+    } catch (error) {
+      console.error('[v0] add emergency history error:', error)
+      toast.error('추가에 실패했습니다.')
+    }
+  }
+
+  async function handleUpdateHistory(id: number, fields: Record<string, string>) {
+    await updateEquipmentEmergencyHistory(id, equipmentId, fields)
+  }
+
+  async function handleDeleteHistory(id: number) {
+    await deleteEquipmentEmergencyHistory(id, equipmentId)
   }
 
   return (
     <EmergencyFlowTable
-      rows={rows}
-      onAdd={handleAdd}
-      onUpdate={handleUpdate}
-      onDelete={handleDelete}
+      guides={guides}
+      histories={histories}
+      onAddGuide={handleAddGuide}
+      onUpdateGuide={handleUpdateGuide}
+      onDeleteGuide={handleDeleteGuide}
+      onAddHistory={handleAddHistory}
+      onUpdateHistory={handleUpdateHistory}
+      onDeleteHistory={handleDeleteHistory}
       escalationNote={escalationNote}
       onEscalationChange={setEscalationNote}
       onEscalationCommit={(value) => updateEquipment(equipmentId, { escalationNote: value })}

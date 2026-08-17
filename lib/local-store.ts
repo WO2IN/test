@@ -18,7 +18,8 @@ export interface Store {
   dailyCheckSheets: any[]
   dailyCheckEntries: any[]
   dailyCheckIssues: any[]
-  equipmentEmergencyActions: any[]
+  equipmentEmergencyGuides: any[]
+  equipmentEmergencyHistories: any[]
   tempHumiditySheets: any[]
   tempHumidityEntries: any[]
   tempHumidityIssues: any[]
@@ -37,7 +38,8 @@ function emptyStore(): Store {
     dailyCheckSheets: [],
     dailyCheckEntries: [],
     dailyCheckIssues: [],
-    equipmentEmergencyActions: [],
+    equipmentEmergencyGuides: [],
+    equipmentEmergencyHistories: [],
     tempHumiditySheets: [],
     tempHumidityEntries: [],
     tempHumidityIssues: [],

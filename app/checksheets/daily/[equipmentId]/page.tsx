@@ -3,7 +3,8 @@ import {
   getEquipmentById,
   getEquipmentPhotos,
   getDailyCheckItems,
-  getEquipmentEmergencyActions,
+  getEquipmentEmergencyGuides,
+  getEquipmentEmergencyHistories,
 } from '@/app/actions/equipment'
 import { getOrCreateDailyCheckSheet, getDailyCheckEntries, updateDailyCheckSheetFields } from '@/app/actions/daily-check'
 import { SiteHeader } from '@/components/site-header'
@@ -33,11 +34,12 @@ export default async function DailyCheckDetailPage({
   const year = sp.year ? Number(sp.year) : curYear
   const month = sp.month ? Number(sp.month) : curMonth
 
-  const [photos, items, sheet, emergencyActions] = await Promise.all([
+  const [photos, items, sheet, guides, histories] = await Promise.all([
     getEquipmentPhotos(equipId),
     getDailyCheckItems(equipId),
     getOrCreateDailyCheckSheet(equipId, year, month),
-    getEquipmentEmergencyActions(equipId),
+    getEquipmentEmergencyGuides(equipId),
+    getEquipmentEmergencyHistories(equipId),
   ])
   const entries = await getDailyCheckEntries(sheet.id)
 
@@ -81,7 +83,7 @@ export default async function DailyCheckDetailPage({
         </div>
 
         {photos.length > 0 && (
-          <div className="print-sheet flex flex-wrap items-start gap-3 border border-border bg-card p-4">
+          <div className="print-photo-box flex flex-wrap items-start gap-3 border border-border bg-card p-4">
             {photos.map((photo) => {
               const isOverview = photo.label === '전체 전경'
               return (
@@ -105,7 +107,7 @@ export default async function DailyCheckDetailPage({
 
         <InspectorManagerCard equipment={equip} />
 
-        <EmergencyActionCard equipmentId={equipId} equipment={equip} rows={emergencyActions} />
+        <EmergencyActionCard equipmentId={equipId} equipment={equip} guides={guides} histories={histories} />
       </main>
     </div>
   )

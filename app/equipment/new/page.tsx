@@ -18,16 +18,21 @@ import {
   createEquipment,
   addEquipmentPhoto,
   createDailyCheckItem,
-  createEquipmentEmergencyAction,
+  createEquipmentEmergencyGuide,
+  createEquipmentEmergencyHistory,
 } from '@/app/actions/equipment'
 
 const OVERVIEW_LABEL = '전체 전경'
 const PART_LABELS = ['1', '2', '3', '4', '5', '6', '7']
 
-interface DraftEmergencyAction {
+interface DraftEmergencyGuide {
   id: number
   emergencyType?: string
   emergencyAction?: string
+}
+
+interface DraftEmergencyHistory {
+  id: number
   occurredDate?: string
   cause?: string
   action?: string
@@ -44,7 +49,8 @@ export default function NewEquipmentPage() {
   const [partPhotos, setPartPhotos] = useState<Record<string, File | null>>({})
   const [checkItems, setCheckItems] = useState<DraftCheckItem[]>([])
   const [inspectorManager, setInspectorManager] = useState<InspectorManagerValue>(EMPTY_INSPECTOR_MANAGER_VALUE)
-  const [emergencyRows, setEmergencyRows] = useState<DraftEmergencyAction[]>([])
+  const [emergencyGuides, setEmergencyGuides] = useState<DraftEmergencyGuide[]>([])
+  const [emergencyHistories, setEmergencyHistories] = useState<DraftEmergencyHistory[]>([])
   const [escalationNote, setEscalationNote] = useState('')
 
   async function uploadFile(file: File) {
@@ -99,9 +105,13 @@ export default function NewEquipmentPage() {
         })
       }
 
-      for (let i = 0; i < emergencyRows.length; i++) {
-        const row = emergencyRows[i]
-        await createEquipmentEmergencyAction(created.id, { ...row, sortOrder: i })
+      for (let i = 0; i < emergencyGuides.length; i++) {
+        const row = emergencyGuides[i]
+        await createEquipmentEmergencyGuide(created.id, { ...row, sortOrder: i })
+      }
+      for (let i = 0; i < emergencyHistories.length; i++) {
+        const row = emergencyHistories[i]
+        await createEquipmentEmergencyHistory(created.id, { ...row, sortOrder: i })
       }
 
       toast.success('설비가 등록되었습니다.')
@@ -197,15 +207,25 @@ export default function NewEquipmentPage() {
               <InspectorManagerFields value={inspectorManager} onChange={setInspectorManager} />
 
               <EmergencyFlowTable
-                rows={emergencyRows}
-                onAdd={async () => {
-                  setEmergencyRows((rows) => [...rows, { id: Date.now() }])
+                guides={emergencyGuides}
+                histories={emergencyHistories}
+                onAddGuide={async () => {
+                  setEmergencyGuides((rows) => [...rows, { id: Date.now() }])
                 }}
-                onUpdate={async (id, fields) => {
-                  setEmergencyRows((rows) => rows.map((row) => (row.id === id ? { ...row, ...fields } : row)))
+                onUpdateGuide={async (id, fields) => {
+                  setEmergencyGuides((rows) => rows.map((row) => (row.id === id ? { ...row, ...fields } : row)))
                 }}
-                onDelete={async (id) => {
-                  setEmergencyRows((rows) => rows.filter((row) => row.id !== id))
+                onDeleteGuide={async (id) => {
+                  setEmergencyGuides((rows) => rows.filter((row) => row.id !== id))
+                }}
+                onAddHistory={async () => {
+                  setEmergencyHistories((rows) => [...rows, { id: Date.now() }])
+                }}
+                onUpdateHistory={async (id, fields) => {
+                  setEmergencyHistories((rows) => rows.map((row) => (row.id === id ? { ...row, ...fields } : row)))
+                }}
+                onDeleteHistory={async (id) => {
+                  setEmergencyHistories((rows) => rows.filter((row) => row.id !== id))
                 }}
                 escalationNote={escalationNote}
                 onEscalationChange={setEscalationNote}

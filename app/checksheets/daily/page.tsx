@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ChevronRightIcon, WrenchIcon } from 'lucide-react'
+import { ChevronRightIcon, WrenchIcon, PlusIcon } from 'lucide-react'
 import { getEquipmentList } from '@/app/actions/equipment'
 import { SiteHeader } from '@/components/site-header'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty'
@@ -12,8 +12,16 @@ export default async function DailyCheckIndexPage() {
     <div className="min-h-dvh bg-background">
       <SiteHeader active="/checksheets/daily" />
       <main className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-6 sm:px-6">
-        <h1 className="text-xl font-semibold">설비 일상점검 체크시트</h1>
-        <p className="text-sm text-muted-foreground">점검할 설비를 선택하세요.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">설비 일상점검 체크시트</h1>
+            <p className="text-sm text-muted-foreground">점검할 설비를 선택하세요.</p>
+          </div>
+          <Link href="/equipment/new" className={buttonVariants({ variant: 'default' })}>
+            <PlusIcon data-icon="inline-start" />
+            설비 추가
+          </Link>
+        </div>
 
         {equipmentList.length === 0 ? (
           <Empty className="border border-dashed border-border">
@@ -22,11 +30,11 @@ export default async function DailyCheckIndexPage() {
                 <WrenchIcon />
               </EmptyMedia>
               <EmptyTitle>등록된 설비가 없습니다</EmptyTitle>
-              <EmptyDescription>먼저 설비 관리 페이지에서 설비를 등록하세요.</EmptyDescription>
+              <EmptyDescription>먼저 새로운 설비를 등록하세요.</EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Link href="/equipment" className={buttonVariants()}>
-                설비 관리로 이동
+              <Link href="/equipment/new" className={buttonVariants()}>
+                설비 추가하기
               </Link>
             </EmptyContent>
           </Empty>

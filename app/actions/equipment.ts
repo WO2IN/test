@@ -150,17 +150,56 @@ export async function deleteDailyCheckItem(id: number, equipmentId: number) {
   revalidatePath(`/checksheets/daily/${equipmentId}`)
 }
 
-export async function getEquipmentEmergencyActions(equipmentId: number) {
-  return selectWhere("equipmentEmergencyActions", (i) => i.equipmentId === equipmentId).sort(
+export async function getEquipmentEmergencyGuides(equipmentId: number) {
+  return selectWhere("equipmentEmergencyGuides", (i) => i.equipmentId === equipmentId).sort(
     (a, b) => a.sortOrder - b.sortOrder || a.id - b.id,
   )
 }
 
-export async function createEquipmentEmergencyAction(
+export async function createEquipmentEmergencyGuide(
   equipmentId: number,
   data: {
     emergencyType?: string
     emergencyAction?: string
+    sortOrder?: number
+  },
+) {
+  const created = insertRow("equipmentEmergencyGuides", {
+    equipmentId,
+    emergencyType: data.emergencyType || null,
+    emergencyAction: data.emergencyAction || null,
+    sortOrder: data.sortOrder ?? 0,
+  })
+  revalidatePath(`/equipment/${equipmentId}`)
+  return created
+}
+
+export async function updateEquipmentEmergencyGuide(
+  id: number,
+  equipmentId: number,
+  data: {
+    emergencyType?: string
+    emergencyAction?: string
+  },
+) {
+  updateById("equipmentEmergencyGuides", id, data)
+  revalidatePath(`/equipment/${equipmentId}`)
+}
+
+export async function deleteEquipmentEmergencyGuide(id: number, equipmentId: number) {
+  removeWhere("equipmentEmergencyGuides", (i) => i.id === id)
+  revalidatePath(`/equipment/${equipmentId}`)
+}
+
+export async function getEquipmentEmergencyHistories(equipmentId: number) {
+  return selectWhere("equipmentEmergencyHistories", (i) => i.equipmentId === equipmentId).sort(
+    (a, b) => a.sortOrder - b.sortOrder || a.id - b.id,
+  )
+}
+
+export async function createEquipmentEmergencyHistory(
+  equipmentId: number,
+  data: {
     occurredDate?: string
     cause?: string
     action?: string
@@ -169,10 +208,8 @@ export async function createEquipmentEmergencyAction(
     sortOrder?: number
   },
 ) {
-  const created = insertRow("equipmentEmergencyActions", {
+  const created = insertRow("equipmentEmergencyHistories", {
     equipmentId,
-    emergencyType: data.emergencyType || null,
-    emergencyAction: data.emergencyAction || null,
     occurredDate: data.occurredDate || null,
     cause: data.cause || null,
     action: data.action || null,
@@ -184,12 +221,10 @@ export async function createEquipmentEmergencyAction(
   return created
 }
 
-export async function updateEquipmentEmergencyAction(
+export async function updateEquipmentEmergencyHistory(
   id: number,
   equipmentId: number,
   data: {
-    emergencyType?: string
-    emergencyAction?: string
     occurredDate?: string
     cause?: string
     action?: string
@@ -197,11 +232,11 @@ export async function updateEquipmentEmergencyAction(
     note?: string
   },
 ) {
-  updateById("equipmentEmergencyActions", id, data)
+  updateById("equipmentEmergencyHistories", id, data)
   revalidatePath(`/equipment/${equipmentId}`)
 }
 
-export async function deleteEquipmentEmergencyAction(id: number, equipmentId: number) {
-  removeWhere("equipmentEmergencyActions", (i) => i.id === id)
+export async function deleteEquipmentEmergencyHistory(id: number, equipmentId: number) {
+  removeWhere("equipmentEmergencyHistories", (i) => i.id === id)
   revalidatePath(`/equipment/${equipmentId}`)
 }
