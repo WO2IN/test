@@ -324,8 +324,26 @@
   .print-photo-box {
     flex: 0 0 auto !important;
     border: 1.5px solid #000 !important;
-    padding: 4px !important;
-    overflow: hidden !important;
+    padding: 6px !important;
+    display: block !important;
+    overflow: hidden !important; /* Clear floats if any, but also clip */
+  }
+  .print-photo-box figure {
+    float: left;
+    margin-right: 8px;
+    margin-bottom: 4px;
+    width: auto !important;
+  }
+  .print-photo-box img {
+    height: 120px !important;
+    width: auto !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+  }
+  .print-photo-box::after {
+    content: "";
+    display: table;
+    clear: both;
   }
   .print-sheet {
     box-shadow: none !important;
