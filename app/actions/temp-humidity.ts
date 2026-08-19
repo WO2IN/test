@@ -1,13 +1,34 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { findOne, insertRow, removeWhere, selectWhere, updateById } from "@/lib/local-store"
+import { findOne, insertRow, removeWhere, selectWhere, updateById, selectAll } from "@/lib/local-store"
 
-export async function getOrCreateTempHumiditySheet(year: number, month: number) {
-  const existing = findOne("tempHumiditySheets", (s: any) => s.year === year && s.month === month)
+export async function getTempHumidityTargets() {
+  return selectAll("tempHumidityTargets")
+}
+
+export async function getTempHumidityTargetById(id: number) {
+  return findOne("tempHumidityTargets", (t: any) => t.id === id)
+}
+
+export async function createTempHumidityTarget(data: { name: string; department?: string; manager?: string; standard?: string }) {
+  const result = insertRow("tempHumidityTargets", { ...data, createdAt: new Date().toISOString() })
+  revalidatePath("/checksheets/temp-humidity")
+  return result
+}
+
+export async function updateTempHumidityTarget(id: number, data: { name?: string; department?: string; manager?: string; standard?: string }) {
+  const result = updateById("tempHumidityTargets", id, data)
+  revalidatePath("/checksheets/temp-humidity")
+  return result
+}
+
+export async function getOrCreateTempHumiditySheet(targetId: number, year: number, month: number) {
+  const existing = findOne("tempHumiditySheets", (s: any) => s.targetId === targetId && s.year === year && s.month === month)
   if (existing) return existing
 
   return insertRow("tempHumiditySheets", {
+    targetId,
     year,
     month,
     remarks: null,

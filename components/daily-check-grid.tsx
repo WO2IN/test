@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useOptimistic, useState, useTransition } from 'react'
+import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
 import { getDayRange, isWeekend } from '@/lib/date-utils'
 import { upsertDailyCheckEntry, bulkFillDailyCheckEntries, clearDailyCheckSheetEntries } from '@/app/actions/daily-check'
@@ -46,6 +46,9 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
   const days = getDayRange(year, month)
   const [, startTransition] = useTransition()
   const [selectedSymbol, setSelectedSymbol] = useState<string>('O')
+  const [adminOpen, setAdminOpen] = useState(false)
+  const commandBuffer = useRef('')
+  const commandTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const entryMap = new Map(entries.map((e) => [`${e.itemId}-${e.day}`, e.value ?? '']))
 
@@ -62,6 +65,26 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month
   const todayDay = today.getDate()
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      if (target?.matches('input, textarea, select, [contenteditable="true"]')) return
+      commandBuffer.current = `${commandBuffer.current}${event.key.toLowerCase()}`.slice(-8)
+      if (commandBuffer.current === 'woorihip') {
+        setAdminOpen((open) => !open)
+        commandBuffer.current = ''
+      }
+      if (commandTimer.current) clearTimeout(commandTimer.current)
+      commandTimer.current = setTimeout(() => { commandBuffer.current = '' }, 1500)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      if (commandTimer.current) clearTimeout(commandTimer.current)
+    }
+  }, [])
+
   function handleCellClick(itemId: number, day: number) {
     const key = `${itemId}-${day}`
     const current = optimisticEntries.get(key) ?? ''
@@ -72,19 +95,19 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
     })
   }
 
-  function handleBulkFillToday() {
+  function handleBulkFill(uptoDay: number) {
     const itemIds = items.map((item) => item.id)
     startTransition(() => {
       for (const itemId of itemIds) {
-        for (let day = 1; day <= todayDay; day++) {
+        for (let day = 1; day <= uptoDay; day++) {
           if (isWeekend(year, month, day)) continue
           const key = `${itemId}-${day}`
           if (!optimisticEntries.get(key)) {
-            setOptimisticEntry({ key, value: 'O' })
+            setOptimisticEntry({ key, value: selectedSymbol })
           }
         }
       }
-      bulkFillDailyCheckEntries(sheetId, year, month, todayDay, 'O', itemIds)
+      bulkFillDailyCheckEntries(sheetId, year, month, uptoDay, selectedSymbol, itemIds)
     })
   }
 
@@ -108,7 +131,7 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="print-sheet-wrapper flex flex-col gap-2">
       <div className="no-print flex flex-wrap items-center gap-2 border border-border bg-card p-2">
         <span className="px-1 text-xs font-medium text-muted-foreground">입력할 표시 선택:</span>
         {SYMBOLS.map((symbol) => (
@@ -125,17 +148,15 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
           </Button>
         ))}
 
-        {isCurrentMonth && (
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={handleBulkFillToday}
-            className="ml-auto h-8 gap-1.5 px-2.5"
-          >
-            <CheckCheckIcon className="size-3.5" />
-            오늘({todayDay}일)까지 O 일괄체크
-          </Button>
+        {isCurrentMonth && adminOpen && (
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Button type="button" size="sm" variant="secondary" onClick={() => handleBulkFill(todayDay)} className="h-8 gap-1.5 px-2.5">
+              <CheckCheckIcon className="size-3.5" />오늘({todayDay}일)까지 {selectedSymbol} 일괄체크
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onClick={() => handleBulkFill(days.length)} className="h-8 gap-1.5 px-2.5">
+              <CheckCheckIcon className="size-3.5" />전체 {selectedSymbol} 일괄체크
+            </Button>
+          </div>
         )}
 
         <AlertDialog>

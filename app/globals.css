@@ -270,10 +270,20 @@
     gap: 6px !important;
     padding: 0 !important;
   }
-  .print-page > .print-compact-box:last-child {
+  .print-page > .print-issue-table {
     margin-top: 4px !important;
     flex: 0 0 auto !important;
   }
+  .print-page > .print-inspector-table {
+    flex: 0 0 auto !important;
+  }
+  .print-page > .print-sheet-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+  }
+  .print-sheet-wrapper > .print-sheet,
   .print-page > .print-sheet {
     flex: 1 1 0 !important;
     min-height: 0 !important;
@@ -287,6 +297,13 @@
   }
   .print-sheet table {
     height: 100% !important;
+  }
+  .print-inspector-table table {
+    font-size: 9px !important;
+  }
+  .print-inspector-table th,
+  .print-inspector-table td {
+    padding: 2px !important;
   }
   .print-logo {
     width: 88px !important;
@@ -323,22 +340,28 @@
   }
   .print-photo-box {
     flex: 0 0 auto !important;
+    max-height: 90px !important;
     border: 1.5px solid #000 !important;
-    padding: 6px !important;
+    padding: 4px 6px !important;
     display: block !important;
     overflow: hidden !important; /* Clear floats if any, but also clip */
   }
   .print-photo-box figure {
     float: left;
-    margin-right: 8px;
-    margin-bottom: 4px;
+    margin-right: 6px;
+    margin-bottom: 2px;
     width: auto !important;
   }
+  .print-photo-box figcaption {
+    font-size: 7px !important;
+    line-height: 1.2 !important;
+  }
   .print-photo-box img {
-    height: 120px !important;
+    height: 62px !important;
     width: auto !important;
+    max-width: 110px !important;
     aspect-ratio: auto !important;
-    object-fit: contain !important;
+    object-fit: cover !important;
   }
   .print-photo-box::after {
     content: "";

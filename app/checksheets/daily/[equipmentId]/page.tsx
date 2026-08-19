@@ -5,6 +5,7 @@ import {
   getDailyCheckItems,
   getEquipmentEmergencyGuides,
   getEquipmentEmergencyHistories,
+  updateEquipment,
 } from '@/app/actions/equipment'
 import { getOrCreateDailyCheckSheet, getDailyCheckEntries, updateDailyCheckSheetFields } from '@/app/actions/daily-check'
 import { SiteHeader } from '@/components/site-header'
@@ -16,6 +17,7 @@ import { InspectorManagerCard } from '@/components/inspector-manager-card'
 import { EmergencyActionCard } from '@/components/emergency-action-card'
 import { currentYearMonth } from '@/lib/date-utils'
 import { cn } from '@/lib/utils'
+import { SheetHeaderEditor } from '@/components/sheet-header-editor'
 
 export default async function DailyCheckDetailPage({
   params,
@@ -65,11 +67,18 @@ export default async function DailyCheckDetailPage({
               className="print-logo h-12 w-auto object-contain"
             />
             <div className="flex flex-col gap-1">
-              <h1 className="text-balance text-xl font-semibold">
+              <h1 className="text-balance text-xl font-semibold flex items-center">
                 {year}년 {month}월 설비 일상점검 체크시트
+                <SheetHeaderEditor
+                  id={equipId}
+                  name={equip.name}
+                  department={equip.department || ''}
+                  manager={equip.manager || ''}
+                  updateAction={updateEquipment}
+                />
               </h1>
               <p className="text-sm text-muted-foreground">
-                점검부서: {sheet.department || equip.department || '-'} · 담당자: {sheet.manager || equip.manager || '-'} · 설비명:{' '}
+                점검부서: {equip.department || '-'} · 담당자: {equip.manager || '-'} · 설비명:{' '}
                 {equip.name}
               </p>
             </div>

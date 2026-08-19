@@ -56,9 +56,10 @@ export function IssueLogTable({ title = '이상발생 조치사항', columns, ro
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 1} className="p-4 text-center text-muted-foreground">
+                <td colSpan={columns.length} className="p-4 text-center text-muted-foreground">
                   등록된 이력이 없습니다.
                 </td>
+                <td className="no-print" />
               </tr>
             ) : (
               rows.map((row) => (

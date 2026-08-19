@@ -37,7 +37,7 @@ export function InspectorManagerFields({ value, onChange, onCommit }: InspectorM
   }
 
   return (
-    <div className="overflow-x-auto border border-border">
+    <div className="print-inspector-table no-break overflow-x-auto border border-border">
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr>
@@ -61,7 +61,7 @@ export function InspectorManagerFields({ value, onChange, onCommit }: InspectorM
                     onChange={(e) => handleChange(nameKey, e.target.value)}
                     onBlur={(e) => onCommit?.(nameKey, e.target.value)}
                     placeholder={row.namePlaceholder}
-                    className="h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
+                    className="print-compact-input h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
                   />
                 </td>
                 <td className="border-r border-b border-border p-0">
@@ -70,7 +70,7 @@ export function InspectorManagerFields({ value, onChange, onCommit }: InspectorM
                     onChange={(e) => handleChange(descKey, e.target.value)}
                     onBlur={(e) => onCommit?.(descKey, e.target.value)}
                     placeholder={row.descPlaceholder}
-                    className="h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
+                    className="print-compact-input h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
                   />
                 </td>
                 <td className="border-b border-border p-0">
@@ -79,7 +79,7 @@ export function InspectorManagerFields({ value, onChange, onCommit }: InspectorM
                     onChange={(e) => handleChange(cycleKey, e.target.value)}
                     onBlur={(e) => onCommit?.(cycleKey, e.target.value)}
                     placeholder={row.cyclePlaceholder}
-                    className="h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
+                    className="print-compact-input h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
                   />
                 </td>
               </tr>

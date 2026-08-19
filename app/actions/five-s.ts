@@ -1,15 +1,36 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { findOne, insertRow, removeWhere, selectWhere, updateById } from "@/lib/local-store"
+import { findOne, insertRow, removeWhere, selectWhere, updateById, selectAll } from "@/lib/local-store"
 import { FIVE_S_CATALOG } from "@/lib/constants/five-s-catalog"
 import { isWeekend } from "@/lib/date-utils"
 
-export async function getOrCreateFiveSSheet(year: number, month: number) {
-  const existing = findOne("fiveSSheets", (s: any) => s.year === year && s.month === month)
+export async function getFiveSTargets() {
+  return selectAll("fiveSTargets")
+}
+
+export async function getFiveSTargetById(id: number) {
+  return findOne("fiveSTargets", (t: any) => t.id === id)
+}
+
+export async function createFiveSTarget(data: { name: string; department?: string; manager?: string; standard?: string }) {
+  const result = insertRow("fiveSTargets", { ...data, createdAt: new Date().toISOString() })
+  revalidatePath("/checksheets/5s")
+  return result
+}
+
+export async function updateFiveSTarget(id: number, data: { name?: string; department?: string; manager?: string; standard?: string }) {
+  const result = updateById("fiveSTargets", id, data)
+  revalidatePath("/checksheets/5s")
+  return result
+}
+
+export async function getOrCreateFiveSSheet(targetId: number, year: number, month: number) {
+  const existing = findOne("fiveSSheets", (s: any) => s.targetId === targetId && s.year === year && s.month === month)
   if (existing) return existing
 
   return insertRow("fiveSSheets", {
+    targetId,
     year,
     month,
     remarks: null,

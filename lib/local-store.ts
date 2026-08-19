@@ -12,6 +12,7 @@ const DATA_FILE = path.join(DATA_DIR, "db.json")
 export interface Store {
   equipment: any[]
   equipmentPhotos: any[]
+  fiveSTargets: any[]
   fiveSSheets: any[]
   fiveSEntries: any[]
   dailyCheckItems: any[]
@@ -20,6 +21,7 @@ export interface Store {
   dailyCheckIssues: any[]
   equipmentEmergencyGuides: any[]
   equipmentEmergencyHistories: any[]
+  tempHumidityTargets: any[]
   tempHumiditySheets: any[]
   tempHumidityEntries: any[]
   tempHumidityIssues: any[]
@@ -32,6 +34,7 @@ function emptyStore(): Store {
   return {
     equipment: [],
     equipmentPhotos: [],
+    fiveSTargets: [],
     fiveSSheets: [],
     fiveSEntries: [],
     dailyCheckItems: [],
@@ -40,6 +43,7 @@ function emptyStore(): Store {
     dailyCheckIssues: [],
     equipmentEmergencyGuides: [],
     equipmentEmergencyHistories: [],
+    tempHumidityTargets: [],
     tempHumiditySheets: [],
     tempHumidityEntries: [],
     tempHumidityIssues: [],

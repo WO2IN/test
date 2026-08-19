@@ -91,6 +91,7 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
   }, [])
 
   function handleBlur(day: number, field: 'temperature' | 'humidity' | 'checker', value: string) {
+    if (isWeekend(year, month, day)) return
     startTransition(() => {
       setOptimisticEntry({ day, fields: { [field]: value || null } })
       upsertTempHumidityEntry(sheetId, day, { [field]: value || null })
@@ -114,7 +115,7 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
 
   function fillSelectedEmptyCells() {
     if (!selectionStart || !selectionEnd) return
-    const selectedDays = days.filter((day) => isSelected(day, 'temperature') || isSelected(day, 'humidity'))
+    const selectedDays = days.filter((day) => !isWeekend(year, month, day) && (isSelected(day, 'temperature') || isSelected(day, 'humidity')))
     const min = Number(tempMin)
     const max = Number(tempMax)
     const hMin = Number(humidityMin)
@@ -139,7 +140,7 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
   }
 
   function fillUpToToday() {
-    const targetDays = days.filter((day) => day <= todayDay)
+    const targetDays = days.filter((day) => day <= todayDay && !isWeekend(year, month, day))
     const min = Number(tempMin), max = Number(tempMax), hMin = Number(humidityMin), hMax = Number(humidityMax)
     const updates = targetDays.map((day) => {
       const current = optimisticEntries.get(day)
@@ -219,15 +220,16 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
                 <th className="border-r border-b border-border bg-muted p-1.5 text-left text-xs font-medium">{field === 'temperature' ? '온도(℃)' : '습도(%)'}</th>
                 {days.map((day) => {
                   const entry = optimisticEntries.get(day)
-                  return <td key={day} className={cn('border-r border-b border-border p-0', isSelected(day, field) && 'bg-primary/20 ring-2 ring-inset ring-primary')} onPointerDown={() => { setDragging(true); setSelectionStart({ day, field }); setSelectionEnd({ day, field }) }} onPointerEnter={() => dragging && selectCell({ day, field })}>
-                    <Input aria-label={`${day}일 ${field === 'temperature' ? '온도' : '습도'}`} type="number" step="1" defaultValue={entry?.[field] ?? ''} key={`${field}-${day}-${entry?.[field] ?? ''}`} onBlur={(e) => handleBlur(day, field, e.target.value)} className="h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0" />
+                  const weekend = isWeekend(year, month, day)
+                  return <td key={day} className={cn('border-r border-b border-border p-0', weekend && 'weekend-cell bg-muted-foreground/10', !weekend && isSelected(day, field) && 'bg-primary/20 ring-2 ring-inset ring-primary')} onPointerDown={() => { if (weekend) return; setDragging(true); setSelectionStart({ day, field }); setSelectionEnd({ day, field }) }} onPointerEnter={() => !weekend && dragging && selectCell({ day, field })}>
+                    <Input aria-label={`${day}일 ${field === 'temperature' ? '온도' : '습도'}`} type="number" step="1" disabled={weekend} defaultValue={entry?.[field] ?? ''} key={`${field}-${day}-${entry?.[field] ?? ''}`} onBlur={(e) => handleBlur(day, field, e.target.value)} className="h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:bg-muted/50" />
                   </td>
                 })}
               </tr>
             ))}
             <tr>
               <th className="border-r border-b border-border bg-muted p-1.5 text-left text-xs font-medium">점검자</th>
-              {days.map((day) => <td key={day} className="border-r border-b border-border p-0"><Input aria-label={`${day}일 점검자`} defaultValue={optimisticEntries.get(day)?.checker ?? ''} key={`checker-${day}-${optimisticEntries.get(day)?.checker ?? ''}`} onBlur={(e) => handleBlur(day, 'checker', e.target.value)} className="h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0" /></td>)}
+              {days.map((day) => { const weekend = isWeekend(year, month, day); return <td key={day} className={cn('border-r border-b border-border p-0', weekend && 'weekend-cell bg-muted-foreground/10')}><Input aria-label={`${day}일 점검자`} disabled={weekend} defaultValue={optimisticEntries.get(day)?.checker ?? ''} key={`checker-${day}-${optimisticEntries.get(day)?.checker ?? ''}`} onBlur={(e) => handleBlur(day, 'checker', e.target.value)} className="h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:bg-muted/50" /></td> })}
             </tr>
           </tbody>
         </table>
