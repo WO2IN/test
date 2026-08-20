@@ -2,7 +2,17 @@
 
 import { revalidatePath } from "next/cache"
 import { findOne, insertRow, removeWhere, selectWhere, updateById, updateWhere } from "@/lib/local-store"
-import { isWeekend } from "@/lib/date-utils"
+import { isWeekend, scheduledDaysForCycle } from "@/lib/date-utils"
+
+function isSheetDayOff(sheet: { year: number; month: number; holidays?: number[] } | undefined, day: number) {
+  if (!sheet) return false
+  return isWeekend(sheet.year, sheet.month, day) || (sheet.holidays ?? []).includes(day)
+}
+
+function revalidateDaily() {
+  revalidatePath("/checksheets/daily")
+  revalidatePath("/checksheets/daily/[equipmentId]", "layout")
+}
 
 export async function getOrCreateDailyCheckSheet(equipmentId: number, year: number, month: number) {
   const existing = findOne(
@@ -30,6 +40,9 @@ export async function getDailyCheckEntries(sheetId: number) {
 }
 
 export async function upsertDailyCheckEntry(sheetId: number, itemId: number, day: number, value: string) {
+  const sheet = findOne<any>("dailyCheckSheets", (s: any) => s.id === sheetId)
+  if (value && isSheetDayOff(sheet, day)) return
+
   const existing = findOne(
     "dailyCheckEntries",
     (e: any) => e.sheetId === sheetId && e.itemId === itemId && e.day === day,
@@ -40,7 +53,7 @@ export async function upsertDailyCheckEntry(sheetId: number, itemId: number, day
   } else {
     insertRow("dailyCheckEntries", { sheetId, itemId, day, value })
   }
-  revalidatePath("/checksheets/daily")
+  revalidateDaily()
 }
 
 export async function bulkFillDailyCheckEntries(
@@ -49,30 +62,69 @@ export async function bulkFillDailyCheckEntries(
   month: number,
   uptoDay: number,
   symbol: string,
-  itemIds: number[],
+  items: { id: number; cycle?: string | null }[],
+  fromDay = 1,
 ) {
-  for (const itemId of itemIds) {
-    for (let day = 1; day <= uptoDay; day++) {
-      if (isWeekend(year, month, day)) continue
+  const sheet = findOne<any>("dailyCheckSheets", (s: any) => s.id === sheetId)
+  const holidays: number[] = sheet?.holidays ?? []
+  const isDayOff = (day: number) => isWeekend(year, month, day) || holidays.includes(day)
+  const startDay = Math.max(1, fromDay)
+
+  for (const item of items) {
+    const scheduled = new Set(scheduledDaysForCycle(year, month, startDay, uptoDay, item.cycle || "일", isDayOff))
+    for (const day of scheduled) {
       const existing = findOne(
         "dailyCheckEntries",
-        (e: any) => e.sheetId === sheetId && e.itemId === itemId && e.day === day,
+        (e: any) => e.sheetId === sheetId && e.itemId === item.id && e.day === day,
       )
       if (!existing || !(existing as any).value) {
         if (existing) {
           updateById("dailyCheckEntries", (existing as any).id, { value: symbol })
         } else {
-          insertRow("dailyCheckEntries", { sheetId, itemId, day, value: symbol })
+          insertRow("dailyCheckEntries", { sheetId, itemId: item.id, day, value: symbol })
         }
       }
     }
   }
-  revalidatePath("/checksheets/daily")
+  revalidateDaily()
+}
+
+export async function toggleDailyCheckMark(sheetId: number, role: "inspector" | "manager", day: number) {
+  const sheet = findOne<any>("dailyCheckSheets", (s: any) => s.id === sheetId)
+  if (!sheet || isSheetDayOff(sheet, day)) return
+  const field = role === "inspector" ? "inspectorMarks" : "managerMarks"
+  const current: number[] = sheet[field] ?? []
+  const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day].sort((a, b) => a - b)
+  updateById("dailyCheckSheets", sheetId, { [field]: next })
+  revalidateDaily()
+  return next
+}
+
+export async function fillDailyCheckMarks(
+  sheetId: number,
+  year: number,
+  month: number,
+  fromDay: number,
+  toDay: number,
+  inspectorCycle = "1회/일",
+  managerCycle = "1회/주",
+) {
+  const sheet = findOne<any>("dailyCheckSheets", (s: any) => s.id === sheetId)
+  if (!sheet) return
+  const holidays: number[] = sheet.holidays ?? []
+  const isDayOff = (day: number) => isWeekend(year, month, day) || holidays.includes(day)
+  const inspectorDays = scheduledDaysForCycle(year, month, fromDay, toDay, inspectorCycle || "1회/일", isDayOff)
+  const managerDays = scheduledDaysForCycle(year, month, fromDay, toDay, managerCycle || "1회/주", isDayOff)
+  const inspectorMarks = Array.from(new Set([...(sheet.inspectorMarks ?? []), ...inspectorDays])).sort((a, b) => a - b)
+  const managerMarks = Array.from(new Set([...(sheet.managerMarks ?? []), ...managerDays])).sort((a, b) => a - b)
+  updateById("dailyCheckSheets", sheetId, { inspectorMarks, managerMarks })
+  revalidateDaily()
 }
 
 export async function clearDailyCheckSheetEntries(sheetId: number) {
   removeWhere("dailyCheckEntries", (e: any) => e.sheetId === sheetId)
-  revalidatePath("/checksheets/daily")
+  updateById("dailyCheckSheets", sheetId, { inspectorMarks: [], managerMarks: [] })
+  revalidateDaily()
 }
 
 export async function updateDailyCheckSheetFields(
@@ -80,7 +132,23 @@ export async function updateDailyCheckSheetFields(
   fields: { department?: string; manager?: string; writer?: string; reviewer?: string; approver?: string },
 ) {
   updateById("dailyCheckSheets", sheetId, fields)
-  revalidatePath("/checksheets/daily")
+  revalidateDaily()
+}
+
+export async function toggleDailyCheckHoliday(sheetId: number, day: number) {
+  const sheet = findOne<any>("dailyCheckSheets", (s: any) => s.id === sheetId)
+  const current: number[] = sheet?.holidays ?? []
+  const adding = !current.includes(day)
+  const next = adding ? [...current, day].sort((a, b) => a - b) : current.filter((d) => d !== day)
+  const patch: Record<string, unknown> = { holidays: next }
+  if (adding) {
+    removeWhere("dailyCheckEntries", (e: any) => e.sheetId === sheetId && e.day === day)
+    patch.inspectorMarks = (sheet?.inspectorMarks ?? []).filter((d: number) => d !== day)
+    patch.managerMarks = (sheet?.managerMarks ?? []).filter((d: number) => d !== day)
+  }
+  updateById("dailyCheckSheets", sheetId, patch)
+  revalidateDaily()
+  return next
 }
 
 export async function getDailyCheckIssues(sheetId: number) {
@@ -98,6 +166,7 @@ export async function addDailyCheckIssue(sheetId: number) {
     createdAt: new Date().toISOString(),
   })
   revalidatePath("/checksheets/daily")
+  revalidatePath("/checksheets/daily/[equipmentId]", "layout")
 }
 
 export async function updateDailyCheckIssue(
@@ -106,9 +175,11 @@ export async function updateDailyCheckIssue(
 ) {
   updateWhere("dailyCheckIssues", (i: any) => i.id === id, fields)
   revalidatePath("/checksheets/daily")
+  revalidatePath("/checksheets/daily/[equipmentId]", "layout")
 }
 
 export async function deleteDailyCheckIssue(id: number) {
   removeWhere("dailyCheckIssues", (i: any) => i.id === id)
   revalidatePath("/checksheets/daily")
+  revalidatePath("/checksheets/daily/[equipmentId]", "layout")
 }

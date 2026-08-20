@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { bulkUpsertTempHumidityEntries, upsertTempHumidityEntry, clearTempHumidityEntries } from '@/app/actions/temp-humidity'
 import { CalendarCheck2Icon, DicesIcon, Trash2Icon } from 'lucide-react'
+import { HolidayPickerPopover } from '@/components/holiday-picker-popover'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +19,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 interface TempHumidityEntry {
   day: number
@@ -31,29 +40,66 @@ interface TempHumidityTableProps {
   year: number
   month: number
   entries: TempHumidityEntry[]
+  manager?: string
+  holidays?: number[]
+  onToggleHoliday?: (day: number) => void
 }
 
-type Field = 'temperature' | 'humidity'
-type Cell = { day: number; field: Field }
+const numberInputClassName =
+  'h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:bg-muted/50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 
 function randomInRange(min: number, max: number): string {
   if (min > max) [min, max] = [max, min]
   return Math.round(min + Math.random() * (max - min)).toString()
 }
 
-export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidityTableProps) {
+function parseRangeValues(tempMin: string, tempMax: string, humidityMin: string, humidityMax: string) {
+  const min = Number(tempMin)
+  const max = Number(tempMax)
+  const hMin = Number(humidityMin)
+  const hMax = Number(humidityMax)
+  if (![min, max, hMin, hMax].every(Number.isFinite)) return null
+  return { min, max, hMin, hMax }
+}
+
+function getCheckerInitial(manager: string) {
+  const trimmed = manager.trim()
+  return trimmed ? trimmed[0] : ''
+}
+
+export function TempHumidityTable({
+  sheetId,
+  year,
+  month,
+  entries,
+  manager = '',
+  holidays = [],
+  onToggleHoliday,
+}: TempHumidityTableProps) {
   const days = getDayRange(year, month)
+  const lastDay = days.length
   const [, startTransition] = useTransition()
+  const [fillOpen, setFillOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
-  const [selectionStart, setSelectionStart] = useState<Cell | null>(null)
-  const [selectionEnd, setSelectionEnd] = useState<Cell | null>(null)
-  const [dragging, setDragging] = useState(false)
-  const [tempMin, setTempMin] = useState('15')
-  const [tempMax, setTempMax] = useState('25')
-  const [humidityMin, setHumidityMin] = useState('40')
+  const [tempMin, setTempMin] = useState('10')
+  const [tempMax, setTempMax] = useState('30')
+  const [humidityMin, setHumidityMin] = useState('0')
   const [humidityMax, setHumidityMax] = useState('60')
   const commandBuffer = useRef('')
   const commandTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const today = useMemo(() => new Date(), [])
+  const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month
+  const todayDay = today.getDate()
+  const defaultRangeEnd = isCurrentMonth ? todayDay : lastDay
+  const checkerInitial = useMemo(() => getCheckerInitial(manager), [manager])
+
+  const [rangeStart, setRangeStart] = useState('1')
+  const [rangeEnd, setRangeEnd] = useState(String(defaultRangeEnd))
+
+  function isDayOff(day: number) {
+    return isWeekend(year, month, day) || holidays.includes(day)
+  }
 
   const entryMap = new Map(entries.map((e) => [e.day, e]))
   const [optimisticEntries, setOptimisticEntry] = useOptimistic(
@@ -65,10 +111,6 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
       return next
     },
   )
-
-  const today = useMemo(() => new Date(), [])
-  const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month
-  const todayDay = today.getDate()
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -91,65 +133,82 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
   }, [])
 
   function handleBlur(day: number, field: 'temperature' | 'humidity' | 'checker', value: string) {
-    if (isWeekend(year, month, day)) return
+    if (isDayOff(day)) return
     startTransition(() => {
       setOptimisticEntry({ day, fields: { [field]: value || null } })
       upsertTempHumidityEntry(sheetId, day, { [field]: value || null })
     })
   }
 
-  function selectCell(cell: Cell) {
-    setSelectionStart((current) => current ?? cell)
-    setSelectionEnd(cell)
-  }
-
-  function isSelected(day: number, field: Field) {
-    if (!selectionStart || !selectionEnd) return false
-    const dayMin = Math.min(selectionStart.day, selectionEnd.day)
-    const dayMax = Math.max(selectionStart.day, selectionEnd.day)
-    const fieldMin = Math.min(selectionStart.field === 'temperature' ? 0 : 1, selectionEnd.field === 'temperature' ? 0 : 1)
-    const fieldMax = Math.max(selectionStart.field === 'temperature' ? 0 : 1, selectionEnd.field === 'temperature' ? 0 : 1)
-    const fieldIndex = field === 'temperature' ? 0 : 1
-    return day >= dayMin && day <= dayMax && fieldIndex >= fieldMin && fieldIndex <= fieldMax
-  }
-
-  function fillSelectedEmptyCells() {
-    if (!selectionStart || !selectionEnd) return
-    const selectedDays = days.filter((day) => !isWeekend(year, month, day) && (isSelected(day, 'temperature') || isSelected(day, 'humidity')))
-    const min = Number(tempMin)
-    const max = Number(tempMax)
-    const hMin = Number(humidityMin)
-    const hMax = Number(humidityMax)
-    if (![min, max, hMin, hMax].every(Number.isFinite)) return
-
-    const updates = selectedDays.map((day) => {
-      const current = optimisticEntries.get(day)
-      const temperature = isSelected(day, 'temperature') && !current?.temperature ? randomInRange(min, max) : null
-      const humidity = isSelected(day, 'humidity') && !current?.humidity ? randomInRange(hMin, hMax) : null
-      return { day, temperature, humidity }
-    }).filter((item) => item.temperature !== null || item.humidity !== null)
-
+  function applyFillUpdates(updates: { day: number; temperature?: string | null; humidity?: string | null; checker?: string | null }[]) {
     if (!updates.length) return
     startTransition(() => {
-      updates.forEach(({ day, temperature, humidity }) => {
-        const fields = { ...(temperature !== null ? { temperature } : {}), ...(humidity !== null ? { humidity } : {}) }
+      updates.forEach(({ day, temperature, humidity, checker }) => {
+        const fields = {
+          ...(temperature !== undefined && temperature !== null ? { temperature } : {}),
+          ...(humidity !== undefined && humidity !== null ? { humidity } : {}),
+          ...(checker !== undefined && checker !== null ? { checker } : {}),
+        }
         setOptimisticEntry({ day, fields })
         upsertTempHumidityEntry(sheetId, day, fields)
       })
     })
   }
 
-  function fillUpToToday() {
-    const targetDays = days.filter((day) => day <= todayDay && !isWeekend(year, month, day))
-    const min = Number(tempMin), max = Number(tempMax), hMin = Number(humidityMin), hMax = Number(humidityMax)
-    const updates = targetDays.map((day) => {
+  function getTargetDays(fromDay: number, toDay: number) {
+    const dayMin = Math.max(1, Math.min(fromDay, toDay))
+    const dayMax = Math.min(lastDay, Math.max(fromDay, toDay))
+    return days.filter((day) => day >= dayMin && day <= dayMax && !isDayOff(day))
+  }
+
+  function buildEmptyFill(day: number, ranges: { min: number; max: number; hMin: number; hMax: number }) {
+    const current = optimisticEntries.get(day)
+    const temperature = !current?.temperature ? randomInRange(ranges.min, ranges.max) : null
+    const humidity = !current?.humidity ? randomInRange(ranges.hMin, ranges.hMax) : null
+    const checker = !current?.checker && checkerInitial ? checkerInitial : null
+    return { day, temperature, humidity, checker }
+  }
+
+  function fillEmptyInRange(fromDay: number, toDay: number, closePopover = false) {
+    const ranges = parseRangeValues(tempMin, tempMax, humidityMin, humidityMax)
+    if (!ranges) return
+
+    const updates = getTargetDays(fromDay, toDay)
+      .map((day) => buildEmptyFill(day, ranges))
+      .filter((item) => item.temperature !== null || item.humidity !== null || item.checker !== null)
+
+    applyFillUpdates(updates)
+    if (closePopover) setFillOpen(false)
+  }
+
+  function fillUpToToday(closePopover = false) {
+    const ranges = parseRangeValues(tempMin, tempMax, humidityMin, humidityMax)
+    if (!ranges) return
+
+    const updates = getTargetDays(1, todayDay).map((day) => {
       const current = optimisticEntries.get(day)
-      return { day, temperature: current?.temperature || randomInRange(min, max), humidity: current?.humidity || randomInRange(hMin, hMax) }
-    }).filter((item) => item.temperature !== (optimisticEntries.get(item.day)?.temperature ?? null) || item.humidity !== (optimisticEntries.get(item.day)?.humidity ?? null))
+      return {
+        day,
+        temperature: current?.temperature || randomInRange(ranges.min, ranges.max),
+        humidity: current?.humidity || randomInRange(ranges.hMin, ranges.hMax),
+        checker: current?.checker || checkerInitial || null,
+      }
+    }).filter((item) => {
+      const current = optimisticEntries.get(item.day)
+      return item.temperature !== (current?.temperature ?? null)
+        || item.humidity !== (current?.humidity ?? null)
+        || item.checker !== (current?.checker ?? null)
+    })
+
     startTransition(() => {
-      updates.forEach(({ day, temperature, humidity }) => setOptimisticEntry({ day, fields: { temperature, humidity } }))
+      updates.forEach(({ day, temperature, humidity, checker }) => setOptimisticEntry({ day, fields: { temperature, humidity, checker } }))
       bulkUpsertTempHumidityEntries(sheetId, updates)
     })
+    if (closePopover) setFillOpen(false)
+  }
+
+  function handleRangeFill() {
+    fillEmptyInRange(Number(rangeStart), Number(rangeEnd), true)
   }
 
   function handleClearAll() {
@@ -159,11 +218,104 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
     })
   }
 
+  function handleHolidayToggle(day: number) {
+    if (isWeekend(year, month, day) || !onToggleHoliday) return
+    onToggleHoliday(day)
+  }
+
   return (
     <div className="temp-humidity-table-wrap flex flex-col gap-2">
       <div className="no-print flex flex-col gap-2 border border-border bg-card p-2">
         <div className="flex flex-wrap items-center gap-2">
-          {isCurrentMonth && adminOpen && <Button type="button" size="sm" variant="outline" onClick={fillUpToToday} className="h-8 gap-1.5 px-2.5"><CalendarCheck2Icon data-icon="inline-start" />오늘({todayDay}일)까지 채우기</Button>}
+          {adminOpen && (
+            <Popover open={fillOpen} onOpenChange={setFillOpen}>
+              <PopoverTrigger
+                render={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1.5 px-2.5"
+                  />
+                }
+              >
+                <DicesIcon className="size-3.5" />
+                자동 채우기
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-80 gap-3 p-3">
+                <PopoverHeader>
+                  <PopoverTitle>난수 자동 채우기</PopoverTitle>
+                  <PopoverDescription>
+                    설정한 범위의 온도·습도·점검자 값을 빈 셀에만 채웁니다.
+                    {checkerInitial ? ` (점검자: ${checkerInitial})` : ''}
+                  </PopoverDescription>
+                </PopoverHeader>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-medium">난수 범위</span>
+                    <label className="flex items-center gap-1 text-xs">
+                      온도
+                      <Input aria-label="온도 최솟값" type="number" step="1" value={tempMin} onChange={(e) => setTempMin(e.target.value)} className="h-8 w-16 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                      ~
+                      <Input aria-label="온도 최댓값" type="number" step="1" value={tempMax} onChange={(e) => setTempMax(e.target.value)} className="h-8 w-16 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                    </label>
+                    <label className="flex items-center gap-1 text-xs">
+                      습도
+                      <Input aria-label="습도 최솟값" type="number" step="1" value={humidityMin} onChange={(e) => setHumidityMin(e.target.value)} className="h-8 w-16 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                      ~
+                      <Input aria-label="습도 최댓값" type="number" step="1" value={humidityMax} onChange={(e) => setHumidityMax(e.target.value)} className="h-8 w-16 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                    </label>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-medium">채울 기간</span>
+                    <label className="flex items-center gap-1 text-xs">
+                      <Input
+                        aria-label="시작일"
+                        type="number"
+                        min={1}
+                        max={lastDay}
+                        step="1"
+                        value={rangeStart}
+                        onChange={(e) => setRangeStart(e.target.value)}
+                        className="h-8 w-16 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      />
+                      일 ~
+                      <Input
+                        aria-label="종료일"
+                        type="number"
+                        min={1}
+                        max={lastDay}
+                        step="1"
+                        value={rangeEnd}
+                        onChange={(e) => setRangeEnd(e.target.value)}
+                        className="h-8 w-16 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      />
+                      일
+                    </label>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <Button type="button" size="sm" onClick={handleRangeFill} className="h-8 w-full gap-1.5">
+                      <DicesIcon data-icon="inline-start" />
+                      선택 기간 빈 셀 채우기
+                    </Button>
+                    {isCurrentMonth && (
+                      <Button type="button" size="sm" variant="secondary" onClick={() => fillUpToToday(true)} className="h-8 w-full gap-1.5">
+                        <CalendarCheck2Icon data-icon="inline-start" />
+                        오늘({todayDay}일)까지 채우기
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+
+          {onToggleHoliday && (
+            <HolidayPickerPopover year={year} month={month} holidays={holidays} onToggle={handleHolidayToggle} />
+          )}
 
           <AlertDialog>
             <AlertDialogTrigger
@@ -183,7 +335,7 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
               <AlertDialogHeader>
                 <AlertDialogTitle>이번 달 온/습도 내용을 모두 지울까요?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  {year}년 {month}월 온/습도 체크시트에 입력된 온도, 습도, 점검자 값이 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다. 
+                  {year}년 {month}월 온/습도 체크시트에 입력된 온도, 습도, 점검자 값이 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -198,46 +350,144 @@ export function TempHumidityTable({ sheetId, year, month, entries }: TempHumidit
             </AlertDialogContent>
           </AlertDialog>
         </div>
-        {adminOpen && <div className="flex flex-wrap items-center gap-3 border-t border-border pt-2">
-          <span className="text-xs font-medium">난수 범위</span>
-          <label className="flex items-center gap-1 text-xs">온도 <Input aria-label="온도 최솟값" type="number" step="1" value={tempMin} onChange={(e) => setTempMin(e.target.value)} className="h-8 w-16 text-center" />~<Input aria-label="온도 최댓값" type="number" step="1" value={tempMax} onChange={(e) => setTempMax(e.target.value)} className="h-8 w-16 text-center" /></label>
-          <label className="flex items-center gap-1 text-xs">습도 <Input aria-label="습도 최솟값" type="number" step="1" value={humidityMin} onChange={(e) => setHumidityMin(e.target.value)} className="h-8 w-16 text-center" />~<Input aria-label="습도 최댓값" type="number" step="1" value={humidityMax} onChange={(e) => setHumidityMax(e.target.value)} className="h-8 w-16 text-center" /></label>
-          <Button type="button" size="sm" onClick={fillSelectedEmptyCells} disabled={!selectionStart} className="h-8 gap-1.5"><DicesIcon data-icon="inline-start" />선택 범위 빈 셀 채우기</Button>
-        </div>}
       </div>
 
-      <div className="print-sheet overflow-x-auto border border-border" onPointerUp={() => setDragging(false)}>
-        <table className="no-print min-w-[900px] w-full border-collapse text-xs select-none">
+      <div className="print-sheet overflow-x-auto border border-border">
+        <table className="no-print min-w-[900px] w-full border-collapse text-xs">
           <thead>
             <tr>
               <th className="w-20 border-r border-b border-border bg-muted p-1.5 text-left text-xs font-medium">구분</th>
-              {days.map((day) => <th key={day} className={cn('min-w-7 border-r border-b border-border bg-muted p-1 text-center text-xs font-medium', isWeekend(year, month, day) && 'weekend-cell')}>{day}</th>)}
+              {days.map((day) => {
+                const dayOff = isDayOff(day)
+                return (
+                  <th
+                    key={day}
+                    className={cn(
+                      'min-w-7 border-r border-b border-border bg-muted p-1 text-center text-xs font-medium',
+                      dayOff && 'weekend-cell',
+                    )}
+                  >
+                    {day}
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
-            {(['temperature', 'humidity'] as Field[]).map((field) => (
+            {(['temperature', 'humidity'] as const).map((field) => (
               <tr key={field}>
                 <th className="border-r border-b border-border bg-muted p-1.5 text-left text-xs font-medium">{field === 'temperature' ? '온도(℃)' : '습도(%)'}</th>
                 {days.map((day) => {
                   const entry = optimisticEntries.get(day)
-                  const weekend = isWeekend(year, month, day)
-                  return <td key={day} className={cn('border-r border-b border-border p-0', weekend && 'weekend-cell bg-muted-foreground/10', !weekend && isSelected(day, field) && 'bg-primary/20 ring-2 ring-inset ring-primary')} onPointerDown={() => { if (weekend) return; setDragging(true); setSelectionStart({ day, field }); setSelectionEnd({ day, field }) }} onPointerEnter={() => !weekend && dragging && selectCell({ day, field })}>
-                    <Input aria-label={`${day}일 ${field === 'temperature' ? '온도' : '습도'}`} type="number" step="1" disabled={weekend} defaultValue={entry?.[field] ?? ''} key={`${field}-${day}-${entry?.[field] ?? ''}`} onBlur={(e) => handleBlur(day, field, e.target.value)} className="h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:bg-muted/50" />
-                  </td>
+                  const dayOff = isDayOff(day)
+                  return (
+                    <td key={day} className={cn('border-r border-b border-border p-0', dayOff && 'weekend-cell bg-muted-foreground/10')}>
+                      <Input
+                        aria-label={`${day}일 ${field === 'temperature' ? '온도' : '습도'}`}
+                        type="number"
+                        step="1"
+                        disabled={dayOff}
+                        defaultValue={entry?.[field] ?? ''}
+                        key={`${field}-${day}-${entry?.[field] ?? ''}`}
+                        onBlur={(e) => handleBlur(day, field, e.target.value)}
+                        className={numberInputClassName}
+                      />
+                    </td>
+                  )
                 })}
               </tr>
             ))}
             <tr>
               <th className="border-r border-b border-border bg-muted p-1.5 text-left text-xs font-medium">점검자</th>
-              {days.map((day) => { const weekend = isWeekend(year, month, day); return <td key={day} className={cn('border-r border-b border-border p-0', weekend && 'weekend-cell bg-muted-foreground/10')}><Input aria-label={`${day}일 점검자`} disabled={weekend} defaultValue={optimisticEntries.get(day)?.checker ?? ''} key={`checker-${day}-${optimisticEntries.get(day)?.checker ?? ''}`} onBlur={(e) => handleBlur(day, 'checker', e.target.value)} className="h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:bg-muted/50" /></td> })}
+              {days.map((day) => {
+                const dayOff = isDayOff(day)
+                return (
+                  <td key={day} className={cn('border-r border-b border-border p-0', dayOff && 'weekend-cell bg-muted-foreground/10')}>
+                    <Input
+                      aria-label={`${day}일 점검자`}
+                      disabled={dayOff}
+                      defaultValue={optimisticEntries.get(day)?.checker ?? ''}
+                      key={`checker-${day}-${optimisticEntries.get(day)?.checker ?? ''}`}
+                      onBlur={(e) => handleBlur(day, 'checker', e.target.value)}
+                      className={numberInputClassName}
+                    />
+                  </td>
+                )
+              })}
             </tr>
           </tbody>
         </table>
         <table className="print-only w-full border-collapse text-[7px]">
-          <thead><tr><th className="border border-border bg-muted px-1 py-0.5 text-left">구분</th>{days.map((day) => <th key={day} className="border border-border bg-muted px-0.5 py-0.5 text-center">{day}</th>)}</tr></thead>
+          <thead>
+            <tr>
+              <th className="border border-border bg-muted px-1 py-0.5 text-left">
+                구분
+              </th>
+
+              {days.map((day) => {
+                const dayOff = isDayOff(day)
+
+                return (
+                  <th
+                    key={day}
+                    className={cn(
+                      'border border-border px-0.5 py-0.5 text-center',
+                      dayOff ? 'weekend-cell' : 'bg-muted',
+                    )}
+                  >
+                    {day}
+                  </th>
+                )
+              })}
+            </tr>
+          </thead>
+
           <tbody>
-            {(['temperature', 'humidity'] as Field[]).map((field) => <tr key={field}><th className="border border-border bg-muted px-1 py-0.5 text-left font-medium">{field === 'temperature' ? '온도(℃)' : '습도(%)'}</th>{days.map((day) => <td key={day} className="border border-border px-0.5 py-0.5 text-center">{optimisticEntries.get(day)?.[field] ?? ''}</td>)}</tr>)}
-            <tr><th className="border border-border bg-muted px-1 py-0.5 text-left font-medium">점검자</th>{days.map((day) => <td key={day} className="border border-border px-0.5 py-0.5 text-center">{optimisticEntries.get(day)?.checker ?? ''}</td>)}</tr>
+            {(['temperature', 'humidity'] as const).map((field) => (
+              <tr key={field}>
+                <th className="border border-border bg-muted px-1 py-0.5 text-left font-medium">
+                  {field === 'temperature' ? '온도(℃)' : '습도(%)'}
+                </th>
+
+                {days.map((day) => {
+                  const dayOff = isDayOff(day)
+
+                  return (
+                    <td
+                      key={day}
+                      className={cn(
+                        'border border-border px-0.5 py-0.5 text-center',
+                        dayOff && 'weekend-cell',
+                      )}
+                    >
+                      {optimisticEntries.get(day)?.[field] ?? ''}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+
+            <tr>
+              <th className="border border-border bg-muted px-1 py-0.5 text-left font-medium">
+                점검자
+              </th>
+
+              {days.map((day) => {
+                const dayOff = isDayOff(day)
+
+                return (
+                  <td
+                    key={day}
+                    className={cn(
+                      'border border-border px-0.5 py-0.5 text-center',
+                      dayOff && 'weekend-cell',
+                    )}
+                  >
+                    {optimisticEntries.get(day)?.checker ?? ''}
+                  </td>
+                )
+              })}
+            </tr>
           </tbody>
         </table>
       </div>

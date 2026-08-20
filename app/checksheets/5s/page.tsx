@@ -1,9 +1,9 @@
-import Link from 'next/link'
-import { ChevronRightIcon, WrenchIcon } from 'lucide-react'
-import { getFiveSTargets, createFiveSTarget } from '@/app/actions/five-s'
+import { WrenchIcon } from 'lucide-react'
+import { getFiveSTargets, createFiveSTarget, deleteFiveSTarget } from '@/app/actions/five-s'
 import { SiteHeader } from '@/components/site-header'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty'
 import { TargetCreateDialog } from '@/components/target-create-dialog'
+import { TargetListRow } from '@/components/target-list-row'
 
 export default async function FiveSIndexPage() {
   const targetList = await getFiveSTargets()
@@ -46,19 +46,17 @@ export default async function FiveSIndexPage() {
         ) : (
           <div className="flex flex-col divide-y divide-border border border-border">
             {targetList.map((item) => (
-              <Link
+              <TargetListRow
                 key={item.id}
                 href={`/checksheets/5s/${item.id}`}
-                className="flex items-center justify-between gap-3 bg-card p-4 transition-colors hover:bg-accent/20"
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">{item.name}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {item.department || '부서 미지정'} · {item.manager || '담당자 미지정'}
-                  </span>
-                </div>
-                <ChevronRightIcon className="size-4 text-muted-foreground" />
-              </Link>
+                name={item.name}
+                department={item.department}
+                manager={item.manager}
+                deleteTitle="이 항목을 삭제할까요?"
+                deleteDescription={`${item.name} 항목과 입력된 3정 5S 점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
+                deleteAction={deleteFiveSTarget}
+                id={item.id}
+              />
             ))}
           </div>
         )}

@@ -20,10 +20,10 @@ export function InspectorManagerCard({ equipment }: InspectorManagerCardProps) {
   const [value, setValue] = useState<InspectorManagerValue>({
     inspectorName: equipment.inspectorName ?? '',
     inspectorDesc: equipment.inspectorDesc ?? '',
-    inspectorCycle: equipment.inspectorCycle ?? '',
+    inspectorCycle: equipment.inspectorCycle || '1회/일',
     managerName: equipment.managerName ?? '',
     managerDesc: equipment.managerDesc ?? '',
-    managerCycle: equipment.managerCycle ?? '',
+    managerCycle: equipment.managerCycle || '1회/주',
   })
 
   return (

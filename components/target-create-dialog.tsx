@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { PlusIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -49,6 +49,7 @@ export function TargetCreateDialog({ title, triggerText, createAction, redirectP
         const result = await createAction(data)
         toast.success('추가되었습니다.')
         setOpen(false)
+        router.refresh()
         router.push(`${redirectPathPrefix}/${result.id}`)
       } catch (err) {
         toast.error('오류가 발생했습니다.')
@@ -58,7 +59,7 @@ export function TargetCreateDialog({ title, triggerText, createAction, redirectP
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
+      <DialogTrigger className={buttonVariants({ variant: 'default' })}>
         <PlusIcon data-icon="inline-start" />
         {triggerText}
       </DialogTrigger>

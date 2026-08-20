@@ -159,6 +159,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -173,13 +174,16 @@
     size: A4 landscape;
     margin: 4mm;
   }
+
   .temp-humidity-page {
     min-height: 100vh !important;
   }
+
   .temp-humidity-page .print-sheet,
   .temp-humidity-page .temp-humidity-chart {
     break-inside: avoid;
   }
+
   .temp-humidity-page .temp-humidity-body {
     display: grid !important;
     grid-template-rows: minmax(0, 1fr) auto !important;
@@ -188,18 +192,22 @@
     height: auto !important;
     gap: 4px !important;
   }
+
   .temp-humidity-page table {
     font-size: 10px !important;
   }
+
   .temp-humidity-page th,
   .temp-humidity-page td {
     padding: 3px 4px !important;
   }
+
   .temp-humidity-page input {
     height: 20px !important;
     min-height: 0 !important;
     font-size: 10px !important;
   }
+
   .temp-humidity-page .temp-humidity-chart {
     display: flex !important;
     flex-direction: column !important;
@@ -208,121 +216,179 @@
     padding: 10px !important;
     gap: 6px !important;
   }
-  .temp-humidity-page .temp-humidity-chart > [data-slot="chart"] {
+
+  .temp-humidity-page .temp-humidity-chart>[data-slot="chart"] {
     flex: 1 1 0 !important;
     height: 100% !important;
     min-height: 0 !important;
     width: 100% !important;
     aspect-ratio: auto !important;
   }
-  .temp-humidity-page .temp-humidity-chart > [data-slot="chart"] > div:not([data-chart]) {
+
+  .temp-humidity-page .temp-humidity-chart>[data-slot="chart"]>div:not([data-chart]) {
     height: 100% !important;
     min-height: 0 !important;
     width: 100% !important;
   }
+
   .temp-humidity-page .temp-humidity-chart svg,
-  .temp-humidity-page .temp-humidity-chart > [data-slot="chart"] > div {
+  .temp-humidity-page .temp-humidity-chart>[data-slot="chart"]>div {
     height: 100% !important;
     max-height: none !important;
   }
+
   .temp-humidity-page .temp-humidity-table-wrap {
     min-height: 0 !important;
   }
+
   .temp-humidity-page .print-sheet {
     overflow: visible !important;
     min-height: 0 !important;
   }
+
   .temp-humidity-page .print-only {
     display: table !important;
   }
+
   .temp-humidity-page .print-sheet table.print-only {
     font-size: 10px !important;
   }
+
   .temp-humidity-page .print-only th,
   .temp-humidity-page .print-only td {
     padding: 5px 4px !important;
     font-size: 10px !important;
   }
+
   html,
   body {
     background: white !important;
   }
+
   * {
     print-color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
+
   .no-print {
     display: none !important;
   }
+
   .weekend-cell {
     background-color: #d4d4d8 !important;
   }
+
   .monthly-cell {
     background-color: #fde68a !important;
   }
+
   .no-break {
     break-inside: avoid;
   }
+
   .print-page {
     min-height: calc(100vh - 8mm) !important;
     height: calc(100vh - 8mm) !important;
     gap: 6px !important;
     padding: 0 !important;
   }
-  .print-page > .print-issue-table {
+
+  .print-page>.print-issue-table {
     margin-top: 4px !important;
     flex: 0 0 auto !important;
   }
-  .print-page > .print-inspector-table {
+
+  .print-page>.print-inspector-table {
     flex: 0 0 auto !important;
   }
-  .print-page > .print-sheet-wrapper {
+
+  .print-page>.print-sheet-wrapper {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 1 0 !important;
     min-height: 0 !important;
   }
-  .print-sheet-wrapper > .print-sheet,
-  .print-page > .print-sheet {
+
+  .print-sheet-wrapper>.print-sheet,
+  .print-page>.print-sheet {
     flex: 1 1 0 !important;
     min-height: 0 !important;
   }
-  .print-page > .print-grid {
+
+  .print-page>.print-grid {
     flex: 1 1 0 !important;
     min-height: 0 !important;
   }
-  .print-grid > .print-sheet {
+
+  .print-grid>.print-sheet {
     height: 100% !important;
   }
+
   .print-sheet table {
     height: 100% !important;
   }
+
   .print-inspector-table table {
     font-size: 9px !important;
+    line-height: 1.15 !important;
   }
+
   .print-inspector-table th,
   .print-inspector-table td {
     padding: 2px !important;
+    vertical-align: middle !important;
+    text-align: center !important;
   }
+
+  .print-inspector-table td:first-child,
+  .print-inspector-table td:nth-child(2) {
+    text-align: left !important;
+  }
+
+  .print-inspector-table th:first-child,
+  .print-inspector-table td:first-child {
+    width: 20px !important;
+    min-width: 20px !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
   .print-logo {
     width: 88px !important;
     height: auto !important;
   }
+
   .print-page h1 {
     font-size: 13px !important;
+    line-height: 1.2 !important;
+    align-items: center !important;
   }
+
   .print-page p {
-    font-size: 9px !important;
+    font-size: 8px !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
   }
+
+  .print-page figcaption {
+    font-size: 8px !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+  }
+
   .print-compact-box {
     padding: 6px !important;
     gap: 6px !important;
   }
+
   .print-compact-label {
     padding: 1px 4px !important;
     font-size: 9px !important;
   }
+
   .print-approval-box input,
   .print-compact-input {
     height: 20px !important;
@@ -330,86 +396,127 @@
     padding: 0 2px !important;
     font-size: 9px !important;
   }
+
   .print-remarks textarea {
     min-height: 28px !important;
     padding: 2px 4px !important;
     font-size: 9px !important;
   }
+
   .print-issue-table table {
     font-size: 9px !important;
   }
+
   .print-photo-box {
     flex: 0 0 auto !important;
-    max-height: 90px !important;
+    max-height: 400px !important;
     border: 1.5px solid #000 !important;
     padding: 4px 6px !important;
     display: block !important;
-    overflow: hidden !important; /* Clear floats if any, but also clip */
+    overflow: hidden !important;
+    /* Clear floats if any, but also clip */
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
+
   .print-photo-box figure {
     float: left;
     margin-right: 6px;
     margin-bottom: 2px;
     width: auto !important;
   }
+
   .print-photo-box figcaption {
     font-size: 7px !important;
     line-height: 1.2 !important;
   }
+
   .print-photo-box img {
-    height: 62px !important;
+    height: 120px !important;
     width: auto !important;
-    max-width: 110px !important;
+    max-width: 200px !important;
     aspect-ratio: auto !important;
     object-fit: cover !important;
   }
+
   .print-photo-box::after {
     content: "";
     display: table;
     clear: both;
   }
+
   .print-sheet {
     box-shadow: none !important;
     border: 1.5px solid #000 !important;
     overflow: visible !important;
   }
+
   .print-sheet table {
     width: 100% !important;
     font-size: 8px !important;
+    line-height: 1.15 !important;
+    border-collapse: collapse !important;
   }
+
   .print-sheet th,
   .print-sheet td {
-    padding: 0 !important;
+    padding: 1px 2px !important;
+    vertical-align: middle !important;
+    text-align: center !important;
   }
+
   .print-page table,
   .print-page th,
   .print-page td,
   .print-page .print-compact-box {
     border-color: #000 !important;
   }
+
   .print-page table {
     border: 1.5px solid #000 !important;
   }
+
   .print-page th,
   .print-page td {
     border-width: 1.5px !important;
   }
+
   .print-day-cell {
     height: 15px !important;
     width: 16px !important;
     min-width: 16px !important;
   }
+
   .print-category-cell {
+    width: 58px !important;
+    min-width: 58px !important;
+    white-space: nowrap !important;
+  }
+
+  .print-content-cell {
+    min-width: 0 !important;
+    width: 140px !important;
+  }
+
+  .print-method-cell {
+    width: 64px !important;
+    min-width: 64px !important;
+    white-space: nowrap !important;
+  }
+
+  .print-cycle-cell {
     width: 52px !important;
     min-width: 52px !important;
     white-space: nowrap !important;
   }
-  .print-content-cell {
-    min-width: 0 !important;
-    width: 150px !important;
-  }
-  .print-cycle-cell {
-    width: 26px !important;
-    min-width: 26px !important;
+
+  .print-compact-select {
+    height: 20px !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    font-size: 9px !important;
+    appearance: none !important;
+    background: transparent !important;
+    text-align: center !important;
   }
 }

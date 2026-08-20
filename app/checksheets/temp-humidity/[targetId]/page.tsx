@@ -4,6 +4,7 @@ import {
   updateTempHumiditySheetFields,
   getTempHumidityTargetById,
   updateTempHumidityTarget,
+  toggleTempHumidityHoliday,
 } from '@/app/actions/temp-humidity'
 import { SiteHeader } from '@/components/site-header'
 import { YearMonthPicker } from '@/components/year-month-picker'
@@ -35,6 +36,13 @@ export default async function TempHumidityPage({
 
   const sheet = await getOrCreateTempHumiditySheet(tId, year, month)
   const entries = await getTempHumidityEntries(sheet.id)
+  const holidays: number[] = (sheet as any).holidays ?? []
+
+  const tempLower = target.tempLower ?? 10
+  const tempUpper = target.tempUpper ?? 30
+  const humidityLower = target.humidityLower ?? 0
+  const humidityUpper = target.humidityUpper ?? 60
+  const limitsLabel = `관리기준: 온도 ${tempLower}~${tempUpper}℃ (LCL ${tempLower} / UCL ${tempUpper}) · 습도 ${humidityLower}~${humidityUpper}% (LCL ${humidityLower} / UCL ${humidityUpper})`
 
   async function saveApproval(fields: { writer?: string; reviewer?: string; approver?: string }) {
     'use server'
@@ -44,6 +52,11 @@ export default async function TempHumidityPage({
   async function saveRemarks(value: string) {
     'use server'
     await updateTempHumiditySheetFields(sheet.id, { remarks: value })
+  }
+
+  async function toggleHoliday(day: number) {
+    'use server'
+    await toggleTempHumidityHoliday(sheet.id, day)
   }
 
   return (
@@ -73,12 +86,18 @@ export default async function TempHumidityPage({
                   standard={target.standard || '관리기준: 온도 20±10℃ · 습도 60% 이하'}
                   updateAction={updateTempHumidityTarget}
                   showStandard={true}
+                  numberFields={[
+                    { key: 'tempLower', label: '온도 하한선(LCL, ℃)', defaultValue: target.tempLower ?? 10 },
+                    { key: 'tempUpper', label: '온도 상한선(UCL, ℃)', defaultValue: target.tempUpper ?? 30 },
+                    { key: 'humidityLower', label: '습도 하한선(LCL, %)', defaultValue: target.humidityLower ?? 0 },
+                    { key: 'humidityUpper', label: '습도 상한선(UCL, %)', defaultValue: target.humidityUpper ?? 60 },
+                  ]}
                 />
               </h1>
               <p className="text-sm text-muted-foreground">
                 점검부서: {target.department || '-'} · 담당자: {target.manager || '-'} · 항목명: {target.name}
               </p>
-              <p className="text-sm text-muted-foreground">{target.standard || '관리기준: 온도 20±10℃ · 습도 60% 이하'}</p>
+              <p className="text-sm text-muted-foreground">{target.standard || limitsLabel}</p>
             </div>
           </div>
           <ApprovalBox
@@ -90,8 +109,24 @@ export default async function TempHumidityPage({
         </div>
 
         <div className="temp-humidity-body flex min-h-0 flex-1 flex-col gap-4">
-          <TempHumidityChart year={year} month={month} entries={entries} />
-          <TempHumidityTable sheetId={sheet.id} year={year} month={month} entries={entries} />
+          <TempHumidityChart
+            year={year}
+            month={month}
+            entries={entries}
+            tempLower={tempLower}
+            tempUpper={tempUpper}
+            humidityLower={humidityLower}
+            humidityUpper={humidityUpper}
+          />
+          <TempHumidityTable
+            sheetId={sheet.id}
+            year={year}
+            month={month}
+            entries={entries}
+            manager={target.manager || ''}
+            holidays={holidays}
+            onToggleHoliday={toggleHoliday}
+          />
         </div>
 
         <div className="print-compact-box border border-border bg-card p-4">

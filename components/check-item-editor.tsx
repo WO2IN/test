@@ -5,6 +5,8 @@ import { PlusIcon, Trash2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { CellSelect } from '@/components/cell-select'
+import { CHECK_METHODS, ITEM_CYCLES } from '@/lib/constants/check-catalog'
 
 export interface DraftCheckItem {
   id: number
@@ -35,12 +37,6 @@ export function CheckItemEditor({ items, onChange }: CheckItemEditorProps) {
     onChange(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
   }
 
-  function handleBlurDefault(id: number, field: 'method' | 'cycle', value: string, fallback: string) {
-    if (!value.trim()) {
-      onChange(items.map((item) => (item.id === id ? { ...item, [field]: fallback } : item)))
-    }
-  }
-
   function handleDelete(id: number) {
     onChange(items.filter((item) => item.id !== id))
   }
@@ -52,8 +48,8 @@ export function CheckItemEditor({ items, onChange }: CheckItemEditorProps) {
           <TableRow>
             <TableHead className="w-14">항목</TableHead>
             <TableHead>점검 내용</TableHead>
-            <TableHead className="w-28">점검방법</TableHead>
-            <TableHead className="w-20">주기</TableHead>
+            <TableHead className="w-32">점검방법</TableHead>
+            <TableHead className="w-24">주기</TableHead>
             <TableHead className="w-10" />
           </TableRow>
         </TableHeader>
@@ -69,21 +65,19 @@ export function CheckItemEditor({ items, onChange }: CheckItemEditorProps) {
                 />
               </TableCell>
               <TableCell>
-                <Input
+                <CellSelect
                   value={item.method}
-                  onChange={(e) => handleUpdate(item.id, 'method', e.target.value)}
-                  onBlur={(e) => handleBlurDefault(item.id, 'method', e.target.value, '육안')}
-                  className="h-8"
-                  placeholder="육안"
+                  options={CHECK_METHODS}
+                  onChange={(value) => handleUpdate(item.id, 'method', value)}
+                  className="h-8 rounded-md border border-input"
                 />
               </TableCell>
               <TableCell>
-                <Input
+                <CellSelect
                   value={item.cycle}
-                  onChange={(e) => handleUpdate(item.id, 'cycle', e.target.value)}
-                  onBlur={(e) => handleBlurDefault(item.id, 'cycle', e.target.value, '일')}
-                  className="h-8"
-                  placeholder="일"
+                  options={ITEM_CYCLES}
+                  onChange={(value) => handleUpdate(item.id, 'cycle', value)}
+                  className="h-8 rounded-md border border-input"
                 />
               </TableCell>
               <TableCell>
@@ -106,19 +100,19 @@ export function CheckItemEditor({ items, onChange }: CheckItemEditorProps) {
               />
             </TableCell>
             <TableCell>
-              <Input
+              <CellSelect
                 value={draft.method}
-                onChange={(e) => setDraft((d) => ({ ...d, method: e.target.value }))}
-                placeholder="육안"
-                className="h-8"
+                options={CHECK_METHODS}
+                onChange={(value) => setDraft((d) => ({ ...d, method: value }))}
+                className="h-8 rounded-md border border-input"
               />
             </TableCell>
             <TableCell>
-              <Input
+              <CellSelect
                 value={draft.cycle}
-                onChange={(e) => setDraft((d) => ({ ...d, cycle: e.target.value }))}
-                placeholder="일"
-                className="h-8"
+                options={ITEM_CYCLES}
+                onChange={(value) => setDraft((d) => ({ ...d, cycle: value }))}
+                className="h-8 rounded-md border border-input"
               />
             </TableCell>
             <TableCell>

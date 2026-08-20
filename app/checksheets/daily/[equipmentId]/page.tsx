@@ -7,13 +7,17 @@ import {
   getEquipmentEmergencyHistories,
   updateEquipment,
 } from '@/app/actions/equipment'
-import { getOrCreateDailyCheckSheet, getDailyCheckEntries, updateDailyCheckSheetFields } from '@/app/actions/daily-check'
+import {
+  getOrCreateDailyCheckSheet,
+  getDailyCheckEntries,
+  updateDailyCheckSheetFields,
+  toggleDailyCheckHoliday,
+} from '@/app/actions/daily-check'
 import { SiteHeader } from '@/components/site-header'
 import { YearMonthPicker } from '@/components/year-month-picker'
 import { ApprovalBox } from '@/components/approval-box'
 import { PrintButton } from '@/components/print-button'
 import { DailyCheckGrid } from '@/components/daily-check-grid'
-import { InspectorManagerCard } from '@/components/inspector-manager-card'
 import { EmergencyActionCard } from '@/components/emergency-action-card'
 import { currentYearMonth } from '@/lib/date-utils'
 import { cn } from '@/lib/utils'
@@ -44,10 +48,16 @@ export default async function DailyCheckDetailPage({
     getEquipmentEmergencyHistories(equipId),
   ])
   const entries = await getDailyCheckEntries(sheet.id)
+  const holidays: number[] = (sheet as any).holidays ?? []
 
   async function saveApproval(fields: { writer?: string; reviewer?: string; approver?: string }) {
     'use server'
     await updateDailyCheckSheetFields(sheet.id, fields)
+  }
+
+  async function toggleHoliday(day: number) {
+    'use server'
+    await toggleDailyCheckHoliday(sheet.id, day)
   }
 
   return (
@@ -112,9 +122,28 @@ export default async function DailyCheckDetailPage({
           </div>
         )}
 
-        <DailyCheckGrid sheetId={sheet.id} year={year} month={month} items={items} entries={entries} />
-
-        <InspectorManagerCard equipment={equip} />
+        <DailyCheckGrid
+          sheetId={sheet.id}
+          equipmentId={equipId}
+          year={year}
+          month={month}
+          items={items}
+          entries={entries}
+          holidays={holidays}
+          onToggleHoliday={toggleHoliday}
+          inspector={{
+            name: equip.inspectorName ?? '',
+            desc: equip.inspectorDesc ?? '',
+            cycle: equip.inspectorCycle ?? '',
+          }}
+          manager={{
+            name: equip.managerName ?? '',
+            desc: equip.managerDesc ?? '',
+            cycle: equip.managerCycle ?? '',
+          }}
+          inspectorMarks={(sheet as any).inspectorMarks ?? []}
+          managerMarks={(sheet as any).managerMarks ?? []}
+        />
 
         <EmergencyActionCard equipmentId={equipId} equipment={equip} guides={guides} histories={histories} />
       </main>

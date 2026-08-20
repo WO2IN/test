@@ -16,6 +16,12 @@ import { Field, FieldLabel, FieldContent } from '@/components/ui/field'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
+interface NumberFieldDef {
+  key: string
+  label: string
+  defaultValue?: number | null
+}
+
 interface SheetHeaderEditorProps {
   id: number
   name: string
@@ -25,6 +31,30 @@ interface SheetHeaderEditorProps {
   updateAction: (id: number, data: any) => Promise<any>
   showStandard?: boolean
   standardLabel?: string
+  numberFields?: NumberFieldDef[]
+}
+
+function buildFormValues(
+  name: string,
+  department: string,
+  manager: string,
+  standard: string | undefined,
+  numberFields: NumberFieldDef[] | undefined,
+) {
+  const values: Record<string, string> = {
+    name,
+    department,
+    manager,
+    standard: standard ?? '',
+  }
+
+  if (numberFields) {
+    for (const field of numberFields) {
+      values[field.key] = field.defaultValue != null ? String(field.defaultValue) : ''
+    }
+  }
+
+  return values
 }
 
 export function SheetHeaderEditor({
@@ -36,21 +66,41 @@ export function SheetHeaderEditor({
   updateAction,
   showStandard,
   standardLabel = "관리기준",
+  numberFields,
 }: SheetHeaderEditorProps) {
   const [open, setOpen] = useState(false)
+  const [formValues, setFormValues] = useState<Record<string, string>>(() =>
+    buildFormValues(name, department, manager, standard, numberFields),
+  )
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
+  function handleOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setFormValues(buildFormValues(name, department, manager, standard, numberFields))
+    }
+    setOpen(nextOpen)
+  }
+
+  function updateField(key: string, value: string) {
+    setFormValues((current) => ({ ...current, [key]: value }))
+  }
+
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const data: any = {
-      name: formData.get('name') as string,
-      department: formData.get('department') as string,
-      manager: formData.get('manager') as string,
+    const data: Record<string, string | number | null> = {
+      name: formValues.name,
+      department: formValues.department,
+      manager: formValues.manager,
     }
     if (showStandard) {
-      data.standard = formData.get('standard') as string
+      data.standard = formValues.standard
+    }
+    if (numberFields) {
+      for (const field of numberFields) {
+        const raw = formValues[field.key] ?? ''
+        data[field.key] = raw === '' ? null : Number(raw)
+      }
     }
 
     startTransition(async () => {
@@ -66,7 +116,7 @@ export function SheetHeaderEditor({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         className="no-print ml-2 h-6 w-6 text-muted-foreground hover:text-foreground"
       >
@@ -80,28 +130,47 @@ export function SheetHeaderEditor({
           <Field>
             <FieldLabel htmlFor="name">항목명 / 설비명</FieldLabel>
             <FieldContent>
-              <Input id="name" name="name" defaultValue={name} required />
+              <Input id="name" name="name" value={formValues.name} onChange={(e) => updateField('name', e.target.value)} required />
             </FieldContent>
           </Field>
           <Field>
             <FieldLabel htmlFor="department">점검부서</FieldLabel>
             <FieldContent>
-              <Input id="department" name="department" defaultValue={department} />
+              <Input id="department" name="department" value={formValues.department} onChange={(e) => updateField('department', e.target.value)} />
             </FieldContent>
           </Field>
           <Field>
             <FieldLabel htmlFor="manager">담당자</FieldLabel>
             <FieldContent>
-              <Input id="manager" name="manager" defaultValue={manager} />
+              <Input id="manager" name="manager" value={formValues.manager} onChange={(e) => updateField('manager', e.target.value)} />
             </FieldContent>
           </Field>
           {showStandard && (
             <Field>
               <FieldLabel htmlFor="standard">{standardLabel}</FieldLabel>
               <FieldContent>
-                <Input id="standard" name="standard" defaultValue={standard} />
+                <Input id="standard" name="standard" value={formValues.standard} onChange={(e) => updateField('standard', e.target.value)} />
               </FieldContent>
             </Field>
+          )}
+          {numberFields && numberFields.length > 0 && (
+            <div className="grid grid-cols-2 gap-4">
+              {numberFields.map((field) => (
+                <Field key={field.key}>
+                  <FieldLabel htmlFor={field.key}>{field.label}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id={field.key}
+                      name={field.key}
+                      type="number"
+                      step="0.1"
+                      value={formValues[field.key] ?? ''}
+                      onChange={(e) => updateField(field.key, e.target.value)}
+                    />
+                  </FieldContent>
+                </Field>
+              ))}
+            </div>
           )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>

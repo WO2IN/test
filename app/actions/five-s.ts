@@ -19,10 +19,82 @@ export async function createFiveSTarget(data: { name: string; department?: strin
   return result
 }
 
+export async function deleteFiveSTarget(id: number) {
+  const items = selectWhere("fiveSCheckItems", (i: any) => i.targetId === id)
+  const sheets = selectWhere("fiveSSheets", (s: any) => s.targetId === id)
+  const itemCodes = new Set(items.map((i: any) => i.code))
+  const sheetIds = new Set(sheets.map((s: any) => s.id))
+  removeWhere("fiveSEntries", (e: any) => itemCodes.has(e.itemCode) || sheetIds.has(e.sheetId))
+  removeWhere("fiveSCheckItems", (i: any) => i.targetId === id)
+  removeWhere("fiveSSheets", (s: any) => s.targetId === id)
+  removeWhere("fiveSTargets", (t: any) => t.id === id)
+  revalidatePath("/checksheets/5s")
+}
+
 export async function updateFiveSTarget(id: number, data: { name?: string; department?: string; manager?: string; standard?: string }) {
   const result = updateById("fiveSTargets", id, data)
   revalidatePath("/checksheets/5s")
+  revalidatePath(`/checksheets/5s/${id}`)
   return result
+}
+
+export async function getFiveSCheckItems(targetId: number) {
+  const existing = selectWhere("fiveSCheckItems", (i: any) => i.targetId === targetId)
+  if (existing.length > 0) {
+    return existing.sort((a: any, b: any) => a.category.localeCompare(b.category) || a.no - b.no)
+  }
+  // Seed with the default catalog on first access so existing behavior is preserved.
+  const seeded = FIVE_S_CATALOG.map((item) =>
+    insertRow("fiveSCheckItems", {
+      targetId,
+      category: item.category,
+      no: item.no,
+      content: item.content,
+      cycle: item.cycle,
+      code: `t${targetId}-${item.code}`,
+    }),
+  )
+  return seeded
+}
+
+export async function createFiveSCheckItem(
+  targetId: number,
+  data: { category: string; content: string; cycle: string },
+) {
+  const siblings = selectWhere("fiveSCheckItems", (i: any) => i.targetId === targetId && i.category === data.category)
+  const nextNo = siblings.length > 0 ? Math.max(...siblings.map((i: any) => i.no)) + 1 : 1
+  const created = insertRow("fiveSCheckItems", {
+    targetId,
+    category: data.category,
+    no: nextNo,
+    content: data.content,
+    cycle: data.cycle || "일",
+    code: `t${targetId}-c${Date.now()}`,
+  })
+  revalidatePath("/checksheets/5s")
+  revalidatePath(`/checksheets/5s/${targetId}`)
+  return created
+}
+
+export async function updateFiveSCheckItem(
+  id: number,
+  targetId: number,
+  data: { content?: string; cycle?: string },
+) {
+  const result = updateById("fiveSCheckItems", id, data)
+  revalidatePath("/checksheets/5s")
+  revalidatePath(`/checksheets/5s/${targetId}`)
+  return result
+}
+
+export async function deleteFiveSCheckItem(id: number, targetId: number) {
+  const item = findOne<any>("fiveSCheckItems", (i: any) => i.id === id)
+  removeWhere("fiveSCheckItems", (i: any) => i.id === id)
+  if (item) {
+    removeWhere("fiveSEntries", (e: any) => e.itemCode === item.code)
+  }
+  revalidatePath("/checksheets/5s")
+  revalidatePath(`/checksheets/5s/${targetId}`)
 }
 
 export async function getOrCreateFiveSSheet(targetId: number, year: number, month: number) {
@@ -45,7 +117,15 @@ export async function getFiveSEntries(sheetId: number) {
   return selectWhere("fiveSEntries", (e: any) => e.sheetId === sheetId)
 }
 
+function isSheetDayOff(sheet: { year: number; month: number; holidays?: number[] } | undefined, day: number) {
+  if (!sheet) return false
+  return isWeekend(sheet.year, sheet.month, day) || (sheet.holidays ?? []).includes(day)
+}
+
 export async function upsertFiveSEntry(sheetId: number, itemCode: string, day: number, value: string) {
+  const sheet = findOne<any>("fiveSSheets", (s: any) => s.id === sheetId)
+  if (value && isSheetDayOff(sheet, day)) return
+
   const existing = findOne(
     "fiveSEntries",
     (e: any) => e.sheetId === sheetId && e.itemCode === itemCode && e.day === day,
@@ -57,6 +137,7 @@ export async function upsertFiveSEntry(sheetId: number, itemCode: string, day: n
     insertRow("fiveSEntries", { sheetId, itemCode, day, value })
   }
   revalidatePath("/checksheets/5s")
+  revalidatePath("/checksheets/5s/[targetId]", "layout")
 }
 
 export async function bulkFillFiveSEntries(
@@ -65,13 +146,20 @@ export async function bulkFillFiveSEntries(
   month: number,
   uptoDay: number,
   symbol: string,
+  items: { code: string; cycle: string }[],
+  fromDay = 1,
 ) {
-  for (const item of FIVE_S_CATALOG) {
-    for (let day = 1; day <= uptoDay; day++) {
-      if (isWeekend(year, month, day)) continue
+  const sheet = findOne<any>("fiveSSheets", (s: any) => s.id === sheetId)
+  const holidays: number[] = sheet?.holidays ?? []
+  const isDayOff = (day: number) => isWeekend(year, month, day) || holidays.includes(day)
+  const startDay = Math.max(1, fromDay)
+
+  for (const item of items) {
+    for (let day = startDay; day <= uptoDay; day++) {
+      if (isDayOff(day)) continue
       const scheduled = item.cycle === '일'
         || (item.cycle === '주' && new Date(year, month - 1, day).getDay() === 1)
-        || (item.cycle === '월' && day === Array.from({ length: day }, (_, index) => index + 1).find((candidate) => !isWeekend(year, month, candidate)))
+        || (item.cycle === '월' && day === Array.from({ length: day }, (_, index) => index + 1).find((candidate) => !isDayOff(candidate)))
       if (!scheduled) continue
       const existing = findOne(
         "fiveSEntries",
@@ -87,11 +175,13 @@ export async function bulkFillFiveSEntries(
     }
   }
   revalidatePath("/checksheets/5s")
+  revalidatePath("/checksheets/5s/[targetId]", "layout")
 }
 
 export async function clearFiveSSheetEntries(sheetId: number) {
   removeWhere("fiveSEntries", (e: any) => e.sheetId === sheetId)
   revalidatePath("/checksheets/5s")
+  revalidatePath("/checksheets/5s/[targetId]", "layout")
 }
 
 export async function updateFiveSSheetFields(
@@ -100,4 +190,19 @@ export async function updateFiveSSheetFields(
 ) {
   updateById("fiveSSheets", sheetId, fields)
   revalidatePath("/checksheets/5s")
+  revalidatePath("/checksheets/5s/[targetId]", "layout")
+}
+
+export async function toggleFiveSHoliday(sheetId: number, day: number) {
+  const sheet = findOne<any>("fiveSSheets", (s: any) => s.id === sheetId)
+  const current: number[] = sheet?.holidays ?? []
+  const adding = !current.includes(day)
+  const next = adding ? [...current, day].sort((a, b) => a - b) : current.filter((d) => d !== day)
+  updateById("fiveSSheets", sheetId, { holidays: next })
+  if (adding) {
+    removeWhere("fiveSEntries", (e: any) => e.sheetId === sheetId && e.day === day)
+  }
+  revalidatePath("/checksheets/5s")
+  revalidatePath("/checksheets/5s/[targetId]", "layout")
+  return next
 }

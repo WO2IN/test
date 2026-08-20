@@ -2,10 +2,22 @@
 
 import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
-import { getDayRange, isWeekend } from '@/lib/date-utils'
-import { upsertDailyCheckEntry, bulkFillDailyCheckEntries, clearDailyCheckSheetEntries } from '@/app/actions/daily-check'
-import { CheckCheckIcon, Trash2Icon } from 'lucide-react'
+import { getCheckerInitial, getDayRange, isWeekend, scheduledDaysForCycle } from '@/lib/date-utils'
+import {
+  upsertDailyCheckEntry,
+  bulkFillDailyCheckEntries,
+  clearDailyCheckSheetEntries,
+  toggleDailyCheckMark,
+  fillDailyCheckMarks,
+} from '@/app/actions/daily-check'
+import { updateDailyCheckItem, updateEquipment } from '@/app/actions/equipment'
+import { CHECK_METHODS, ITEM_CYCLES, STAFF_CYCLES } from '@/lib/constants/check-catalog'
+import { Trash2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { CellSelect } from '@/components/cell-select'
+import { HolidayPickerPopover } from '@/components/holiday-picker-popover'
+import { RangeFillPopover } from '@/components/range-fill-popover'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +38,9 @@ const SYMBOL_LABELS: Record<string, string> = {
   '△': '주의',
 }
 
+const footerInputClass =
+  'print-compact-input h-8 rounded-none border-0 px-1 text-center text-xs shadow-none focus-visible:ring-0'
+
 interface DailyCheckItem {
   id: number
   itemNo: number
@@ -34,21 +49,68 @@ interface DailyCheckItem {
   cycle: string | null
 }
 
+interface StaffInfo {
+  name: string
+  desc: string
+  cycle: string
+}
+
 interface DailyCheckGridProps {
   sheetId: number
+  equipmentId: number
   year: number
   month: number
   items: DailyCheckItem[]
   entries: { itemId: number; day: number; value: string | null }[]
+  holidays?: number[]
+  onToggleHoliday?: (day: number) => void
+  inspector?: StaffInfo
+  manager?: StaffInfo
+  inspectorMarks?: number[]
+  managerMarks?: number[]
 }
 
-export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCheckGridProps) {
+export function DailyCheckGrid({
+  sheetId,
+  equipmentId,
+  year,
+  month,
+  items,
+  entries,
+  holidays = [],
+  onToggleHoliday,
+  inspector,
+  manager,
+  inspectorMarks = [],
+  managerMarks = [],
+}: DailyCheckGridProps) {
   const days = getDayRange(year, month)
   const [, startTransition] = useTransition()
   const [selectedSymbol, setSelectedSymbol] = useState<string>('O')
   const [adminOpen, setAdminOpen] = useState(false)
   const commandBuffer = useRef('')
   const commandTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [inspectorInfo, setInspectorInfo] = useState<StaffInfo>({
+    name: inspector?.name ?? '',
+    desc: inspector?.desc ?? '',
+    cycle: inspector?.cycle || '1회/일',
+  })
+  const [managerInfo, setManagerInfo] = useState<StaffInfo>({
+    name: manager?.name ?? '',
+    desc: manager?.desc ?? '',
+    cycle: manager?.cycle || '1회/주',
+  })
+
+  const [optimisticHolidays, toggleOptimisticHoliday] = useOptimistic(
+    holidays,
+    (state, day: number) =>
+      state.includes(day) ? state.filter((d) => d !== day) : [...state, day].sort((a, b) => a - b),
+  )
+
+  function isDayOff(day: number) {
+    return isWeekend(year, month, day) || optimisticHolidays.includes(day)
+  }
 
   const entryMap = new Map(entries.map((e) => [`${e.itemId}-${e.day}`, e.value ?? '']))
 
@@ -61,9 +123,30 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
     },
   )
 
+  const [optimisticInspectorMarks, setOptimisticInspectorMarks] = useOptimistic(
+    inspectorMarks,
+    (state, update: { day: number; days?: number[] }) => {
+      if (update.days) return update.days
+      return state.includes(update.day)
+        ? state.filter((d) => d !== update.day)
+        : [...state, update.day].sort((a, b) => a - b)
+    },
+  )
+  const [optimisticManagerMarks, setOptimisticManagerMarks] = useOptimistic(
+    managerMarks,
+    (state, update: { day: number; days?: number[] }) => {
+      if (update.days) return update.days
+      return state.includes(update.day)
+        ? state.filter((d) => d !== update.day)
+        : [...state, update.day].sort((a, b) => a - b)
+    },
+  )
+
   const today = useMemo(() => new Date(), [])
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month
   const todayDay = today.getDate()
+  const inspectorInitial = getCheckerInitial(inspectorInfo.name) || '✓'
+  const managerInitial = getCheckerInitial(managerInfo.name) || '✓'
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -86,6 +169,7 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
   }, [])
 
   function handleCellClick(itemId: number, day: number) {
+    if (isDayOff(day)) return
     const key = `${itemId}-${day}`
     const current = optimisticEntries.get(key) ?? ''
     const next = current === selectedSymbol ? '' : selectedSymbol
@@ -95,19 +179,54 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
     })
   }
 
-  function handleBulkFill(uptoDay: number) {
-    const itemIds = items.map((item) => item.id)
+  function handleMarkClick(role: 'inspector' | 'manager', day: number) {
+    if (isDayOff(day)) return
     startTransition(() => {
-      for (const itemId of itemIds) {
-        for (let day = 1; day <= uptoDay; day++) {
-          if (isWeekend(year, month, day)) continue
-          const key = `${itemId}-${day}`
+      if (role === 'inspector') setOptimisticInspectorMarks({ day })
+      else setOptimisticManagerMarks({ day })
+      toggleDailyCheckMark(sheetId, role, day)
+    })
+  }
+
+  function handleBulkFill(fromDay: number, toDay: number) {
+    const fillItems = items.map((item) => ({ id: item.id, cycle: item.cycle || '일' }))
+    const inspectorDays = scheduledDaysForCycle(
+      year,
+      month,
+      fromDay,
+      toDay,
+      inspectorInfo.cycle || '1회/일',
+      isDayOff,
+    )
+    const managerDays = scheduledDaysForCycle(year, month, fromDay, toDay, managerInfo.cycle || '1회/주', isDayOff)
+    startTransition(() => {
+      for (const item of fillItems) {
+        const scheduled = scheduledDaysForCycle(year, month, fromDay, toDay, item.cycle, isDayOff)
+        for (const day of scheduled) {
+          const key = `${item.id}-${day}`
           if (!optimisticEntries.get(key)) {
             setOptimisticEntry({ key, value: selectedSymbol })
           }
         }
       }
-      bulkFillDailyCheckEntries(sheetId, year, month, uptoDay, selectedSymbol, itemIds)
+      setOptimisticInspectorMarks({
+        day: 0,
+        days: Array.from(new Set([...optimisticInspectorMarks, ...inspectorDays])).sort((a, b) => a - b),
+      })
+      setOptimisticManagerMarks({
+        day: 0,
+        days: Array.from(new Set([...optimisticManagerMarks, ...managerDays])).sort((a, b) => a - b),
+      })
+      bulkFillDailyCheckEntries(sheetId, year, month, toDay, selectedSymbol, fillItems, fromDay)
+      fillDailyCheckMarks(
+        sheetId,
+        year,
+        month,
+        fromDay,
+        toDay,
+        inspectorInfo.cycle || '1회/일',
+        managerInfo.cycle || '1회/주',
+      )
     })
   }
 
@@ -118,8 +237,44 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
           setOptimisticEntry({ key: `${item.id}-${day}`, value: '' })
         }
       }
+      setOptimisticInspectorMarks({ day: 0, days: [] })
+      setOptimisticManagerMarks({ day: 0, days: [] })
       clearDailyCheckSheetEntries(sheetId)
     })
+  }
+
+  function handleHolidayToggle(day: number) {
+    if (isWeekend(year, month, day) || !onToggleHoliday) return
+    const adding = !optimisticHolidays.includes(day)
+    startTransition(() => {
+      toggleOptimisticHoliday(day)
+      if (adding) {
+        for (const item of items) {
+          setOptimisticEntry({ key: `${item.id}-${day}`, value: '' })
+        }
+        setOptimisticInspectorMarks({
+          day: 0,
+          days: optimisticInspectorMarks.filter((d) => d !== day),
+        })
+        setOptimisticManagerMarks({
+          day: 0,
+          days: optimisticManagerMarks.filter((d) => d !== day),
+        })
+      }
+      onToggleHoliday(day)
+    })
+  }
+
+  function commitStaffField(
+    role: 'inspector' | 'manager',
+    field: 'name' | 'desc' | 'cycle',
+    value: string,
+  ) {
+    const keyMap = {
+      inspector: { name: 'inspectorName', desc: 'inspectorDesc', cycle: 'inspectorCycle' },
+      manager: { name: 'managerName', desc: 'managerDesc', cycle: 'managerCycle' },
+    } as const
+    updateEquipment(equipmentId, { [keyMap[role][field]]: value })
   }
 
   if (items.length === 0) {
@@ -148,52 +303,62 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
           </Button>
         ))}
 
-        {isCurrentMonth && adminOpen && (
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <Button type="button" size="sm" variant="secondary" onClick={() => handleBulkFill(todayDay)} className="h-8 gap-1.5 px-2.5">
-              <CheckCheckIcon className="size-3.5" />오늘({todayDay}일)까지 {selectedSymbol} 일괄체크
-            </Button>
-            <Button type="button" size="sm" variant="secondary" onClick={() => handleBulkFill(days.length)} className="h-8 gap-1.5 px-2.5">
-              <CheckCheckIcon className="size-3.5" />전체 {selectedSymbol} 일괄체크
-            </Button>
-          </div>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {adminOpen && (
+            <RangeFillPopover
+              lastDay={days.length}
+              todayDay={todayDay}
+              isCurrentMonth={isCurrentMonth}
+              description={`선택한 표시(${selectedSymbol})를 빈 칸에만 채웁니다. 항목·점검자·관리자 주기에 맞춰 날짜를 넣고, 휴무일·주말은 건너뜁니다.`}
+              onFillRange={handleBulkFill}
+              onFillUpToToday={isCurrentMonth ? () => handleBulkFill(1, todayDay) : undefined}
+            />
+          )}
+          {onToggleHoliday && (
+            <HolidayPickerPopover
+              year={year}
+              month={month}
+              holidays={optimisticHolidays}
+              onToggle={handleHolidayToggle}
+            />
+          )}
 
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className={cn('h-8 gap-1.5 px-2.5 text-destructive hover:text-destructive', !isCurrentMonth && 'ml-auto')}
-              />
-            }
-          >
-            <Trash2Icon className="size-3.5" />
-            전체 지우기
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>이번 달 점검 내용을 모두 지울까요?</AlertDialogTitle>
-              <AlertDialogDescription>
-                {year}년 {month}월 일상점검 체크시트에 입력된 모든 표시가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>취소</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-white hover:bg-destructive/90"
-                onClick={handleClearAll}
-              >
-                전체 지우기
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1.5 px-2.5 text-destructive hover:text-destructive"
+                />
+              }
+            >
+              <Trash2Icon className="size-3.5" />
+              전체 지우기
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>이번 달 점검 내용을 모두 지울까요?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {year}년 {month}월 일상점검 체크시트에 입력된 모든 표시와 점검자·관리자 서명이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>취소</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-white hover:bg-destructive/90"
+                  onClick={handleClearAll}
+                >
+                  전체 지우기
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
       <p className="no-print px-1 text-xs text-muted-foreground">
-        위에서 표시를 선택한 뒤 칸을 클릭하면 바로 입력됩니다. 같은 표시를 다시 클릭하면 지워집니다.
+        위에서 표시를 선택한 뒤 칸을 클릭하면 바로 입력됩니다. 같은 표시를 다시 클릭하면 지워집니다. 아래 점검자·관리자 칸을 클릭하면 서명됩니다.
       </p>
 
       <div className="print-sheet overflow-x-auto border border-border">
@@ -202,7 +367,7 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
             <tr>
               <th
                 rowSpan={2}
-                className="print-category-cell w-10 border-r border-b border-border bg-muted p-1 text-sm font-medium"
+                className="print-category-cell w-16 whitespace-nowrap border-r border-b border-border bg-muted p-1 text-sm font-medium"
               >
                 항목
               </th>
@@ -214,13 +379,13 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
               </th>
               <th
                 rowSpan={2}
-                className="print-cycle-cell w-16 border-r border-b border-border bg-muted p-1 text-sm font-medium"
+                className="print-method-cell w-28 whitespace-nowrap border-r border-b border-border bg-muted p-1 text-sm font-medium"
               >
                 점검방법
               </th>
               <th
                 rowSpan={2}
-                className="print-cycle-cell w-10 border-r border-b border-border bg-muted p-1 text-sm font-medium"
+                className="print-cycle-cell w-20 whitespace-nowrap border-r border-b border-border bg-muted p-1 text-sm font-medium"
               >
                 주기
               </th>
@@ -229,52 +394,232 @@ export function DailyCheckGrid({ sheetId, year, month, items, entries }: DailyCh
               </th>
             </tr>
             <tr>
-              {days.map((day) => (
-                <th
-                  key={day}
-                  className={cn(
-                    'print-day-cell h-7 w-8 border-r border-b border-border p-0 text-xs font-medium last:border-r-0',
-                    isWeekend(year, month, day) && 'weekend-cell bg-muted-foreground/10',
-                  )}
-                >
-                  {day}
-                </th>
-              ))}
+              {days.map((day) => {
+                const weekend = isWeekend(year, month, day)
+                const holiday = optimisticHolidays.includes(day)
+                return (
+                  <th
+                    key={day}
+                    className={cn(
+                      'print-day-cell h-7 w-8 border-r border-b border-border p-0 text-xs font-medium last:border-r-0',
+                      (weekend || holiday) && 'weekend-cell bg-muted-foreground/10',
+                    )}
+                  >
+                    {day}
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id}>
-                <td className="print-category-cell border-r border-b border-border p-1 text-center">{item.itemNo}</td>
-                <td className="print-content-cell border-r border-b border-border p-1.5 text-left">{item.content}</td>
-                <td className="print-cycle-cell border-r border-b border-border p-1 text-center text-muted-foreground">
-                  {item.method || '-'}
-                </td>
-                <td className="print-cycle-cell border-r border-b border-border p-1 text-center text-muted-foreground">
-                  {item.cycle || '-'}
-                </td>
-                {days.map((day) => {
-                  const key = `${item.id}-${day}`
-                  const value = optimisticEntries.get(key) ?? ''
-                  const weekend = isWeekend(year, month, day)
-                  return (
-                    <td
-                      key={day}
-                      onClick={() => !weekend && handleCellClick(item.id, day)}
-                      className={cn(
-                        'print-day-cell h-8 w-8 border-r border-b border-border p-0 text-center text-xs font-medium last:border-r-0',
-                        weekend ? 'weekend-cell bg-muted-foreground/10 cursor-not-allowed' : 'cursor-pointer hover:bg-accent/30',
-                      )}
-                    >
-                      {value}
-                    </td>
-                  )
-                })}
-              </tr>
+              <CheckItemRow
+                key={item.id}
+                item={item}
+                equipmentId={equipmentId}
+                days={days}
+                optimisticEntries={optimisticEntries}
+                isDayOff={isDayOff}
+                onCellClick={handleCellClick}
+              />
             ))}
           </tbody>
+          <tfoot>
+            <SignatureRow
+              label="점검자"
+              info={inspectorInfo}
+              onInfoChange={setInspectorInfo}
+              onCommit={(field, value) => commitStaffField('inspector', field, value)}
+              namePlaceholder="예: 우데스 과장"
+              descPlaceholder="예: 1일 점검"
+              cycleOptions={STAFF_CYCLES}
+              defaultCycle="1회/일"
+              days={days}
+              marks={optimisticInspectorMarks}
+              markChar={inspectorInitial}
+              isDayOff={isDayOff}
+              onToggleDay={(day) => handleMarkClick('inspector', day)}
+            />
+            <SignatureRow
+              label="관리자"
+              info={managerInfo}
+              onInfoChange={setManagerInfo}
+              onCommit={(field, value) => commitStaffField('manager', field, value)}
+              namePlaceholder="예: 문명선 차장"
+              descPlaceholder="예: 주간 점검 확인"
+              cycleOptions={STAFF_CYCLES}
+              defaultCycle="1회/주"
+              days={days}
+              marks={optimisticManagerMarks}
+              markChar={managerInitial}
+              isDayOff={isDayOff}
+              onToggleDay={(day) => handleMarkClick('manager', day)}
+            />
+          </tfoot>
         </table>
       </div>
     </div>
+  )
+}
+
+function CheckItemRow({
+  item,
+  equipmentId,
+  days,
+  optimisticEntries,
+  isDayOff,
+  onCellClick,
+}: {
+  item: DailyCheckItem
+  equipmentId: number
+  days: number[]
+  optimisticEntries: Map<string, string>
+  isDayOff: (day: number) => boolean
+  onCellClick: (itemId: number, day: number) => void
+}) {
+  const [content, setContent] = useState(item.content)
+  const [method, setMethod] = useState(item.method || '육안')
+  const [cycle, setCycle] = useState(item.cycle || '일')
+
+  function commit(field: 'content' | 'method' | 'cycle', value: string) {
+    updateDailyCheckItem(item.id, equipmentId, { [field]: value })
+  }
+
+  return (
+    <tr>
+      <td className="print-category-cell whitespace-nowrap border-r border-b border-border p-1 text-center">
+        {item.itemNo}
+      </td>
+      <td className="print-content-cell border-r border-b border-border p-0">
+        <Input
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          onBlur={(e) => commit('content', e.target.value)}
+          className={`${footerInputClass} text-left`}
+        />
+      </td>
+      <td className="print-method-cell whitespace-nowrap border-r border-b border-border p-0">
+        <CellSelect
+          aria-label={`${item.itemNo}번 점검방법`}
+          value={method}
+          options={CHECK_METHODS}
+          onChange={(value) => {
+            setMethod(value)
+            commit('method', value)
+          }}
+        />
+      </td>
+      <td className="print-cycle-cell whitespace-nowrap border-r border-b border-border p-0">
+        <CellSelect
+          aria-label={`${item.itemNo}번 주기`}
+          value={cycle}
+          options={ITEM_CYCLES}
+          onChange={(value) => {
+            setCycle(value)
+            commit('cycle', value)
+          }}
+        />
+      </td>
+      {days.map((day) => {
+        const key = `${item.id}-${day}`
+        const value = optimisticEntries.get(key) ?? ''
+        const dayOff = isDayOff(day)
+        return (
+          <td
+            key={day}
+            onClick={() => onCellClick(item.id, day)}
+            className={cn(
+              'print-day-cell h-8 w-8 border-r border-b border-border p-0 text-center text-xs font-medium last:border-r-0',
+              dayOff ? 'weekend-cell bg-muted-foreground/10 cursor-not-allowed' : 'cursor-pointer hover:bg-accent/30',
+            )}
+          >
+            {dayOff ? '' : value}
+          </td>
+        )
+      })}
+    </tr>
+  )
+}
+
+function SignatureRow({
+  label,
+  info,
+  onInfoChange,
+  onCommit,
+  namePlaceholder,
+  descPlaceholder,
+  cycleOptions,
+  defaultCycle,
+  days,
+  marks,
+  markChar,
+  isDayOff,
+  onToggleDay,
+}: {
+  label: string
+  info: StaffInfo
+  onInfoChange: (value: StaffInfo) => void
+  onCommit: (field: 'name' | 'desc' | 'cycle', value: string) => void
+  namePlaceholder: string
+  descPlaceholder: string
+  cycleOptions: readonly string[]
+  defaultCycle: string
+  days: number[]
+  marks: number[]
+  markChar: string
+  isDayOff: (day: number) => boolean
+  onToggleDay: (day: number) => void
+}) {
+  return (
+    <tr>
+      <td className="print-category-cell whitespace-nowrap border-r border-b border-border bg-muted/40 p-1 text-center font-medium">
+        {label}
+      </td>
+      <td className="print-content-cell border-r border-b border-border p-0">
+        <Input
+          value={info.name}
+          onChange={(e) => onInfoChange({ ...info, name: e.target.value })}
+          onBlur={(e) => onCommit('name', e.target.value)}
+          placeholder={namePlaceholder}
+          className={footerInputClass}
+        />
+      </td>
+      <td className="print-method-cell border-r border-b border-border p-0">
+        <Input
+          value={info.desc}
+          onChange={(e) => onInfoChange({ ...info, desc: e.target.value })}
+          onBlur={(e) => onCommit('desc', e.target.value)}
+          placeholder={descPlaceholder}
+          className={footerInputClass}
+        />
+      </td>
+      <td className="print-cycle-cell whitespace-nowrap border-r border-b border-border p-0">
+        <CellSelect
+          aria-label={`${label} 주기`}
+          value={info.cycle || defaultCycle}
+          options={cycleOptions}
+          onChange={(value) => {
+            onInfoChange({ ...info, cycle: value })
+            onCommit('cycle', value)
+          }}
+        />
+      </td>
+      {days.map((day) => {
+        const dayOff = isDayOff(day)
+        const marked = marks.includes(day)
+        return (
+          <td
+            key={day}
+            onClick={() => onToggleDay(day)}
+            className={cn(
+              'print-day-cell h-8 w-8 border-r border-b border-border p-0 text-center text-xs font-medium last:border-r-0',
+              dayOff ? 'weekend-cell bg-muted-foreground/10 cursor-not-allowed' : 'cursor-pointer hover:bg-accent/30',
+            )}
+          >
+            {dayOff || !marked ? '' : markChar}
+          </td>
+        )
+      })}
+    </tr>
   )
 }

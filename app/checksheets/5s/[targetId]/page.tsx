@@ -1,9 +1,11 @@
 import {
   getOrCreateFiveSSheet,
   getFiveSEntries,
+  getFiveSCheckItems,
   updateFiveSSheetFields,
   getFiveSTargetById,
   updateFiveSTarget,
+  toggleFiveSHoliday,
 } from '@/app/actions/five-s'
 import { SiteHeader } from '@/components/site-header'
 import { YearMonthPicker } from '@/components/year-month-picker'
@@ -11,6 +13,7 @@ import { ApprovalBox } from '@/components/approval-box'
 import { RemarksField } from '@/components/remarks-field'
 import { PrintButton } from '@/components/print-button'
 import { FiveSGrid } from '@/components/five-s-grid'
+import { FiveSItemManager } from '@/components/five-s-item-manager'
 import { currentYearMonth } from '@/lib/date-utils'
 import { notFound } from 'next/navigation'
 import { SheetHeaderEditor } from '@/components/sheet-header-editor'
@@ -33,7 +36,8 @@ export default async function FiveSPage({
   const month = sp.month ? Number(sp.month) : curMonth
 
   const sheet = await getOrCreateFiveSSheet(tId, year, month)
-  const entries = await getFiveSEntries(sheet.id)
+  const [entries, items] = await Promise.all([getFiveSEntries(sheet.id), getFiveSCheckItems(tId)])
+  const holidays: number[] = (sheet as any).holidays ?? []
 
   async function saveApproval(fields: { writer?: string; reviewer?: string; approver?: string }) {
     'use server'
@@ -45,13 +49,21 @@ export default async function FiveSPage({
     await updateFiveSSheetFields(sheet.id, { remarks: value })
   }
 
+  async function toggleHoliday(day: number) {
+    'use server'
+    await toggleFiveSHoliday(sheet.id, day)
+  }
+
   return (
     <div className="min-h-dvh bg-background">
       <SiteHeader active="/checksheets/5s" />
       <main className="print-page mx-auto flex max-w-[1400px] flex-col gap-4 px-4 py-6 sm:px-6">
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
           <YearMonthPicker year={year} month={month} />
-          <PrintButton />
+          <div className="flex items-center gap-2">
+            <FiveSItemManager targetId={tId} items={items as any} />
+            <PrintButton />
+          </div>
         </div>
 
         <div className="print-compact-box flex flex-wrap items-start justify-between gap-4 border border-border bg-card p-4">
@@ -91,7 +103,15 @@ export default async function FiveSPage({
           />
         </div>
 
-        <FiveSGrid sheetId={sheet.id} year={year} month={month} entries={entries} />
+        <FiveSGrid
+          sheetId={sheet.id}
+          year={year}
+          month={month}
+          items={items as any}
+          entries={entries}
+          holidays={holidays}
+          onToggleHoliday={toggleHoliday}
+        />
 
         <div className="print-compact-box border border-border bg-card p-4">
           <RemarksField defaultValue={sheet.remarks ?? ''} onSave={saveRemarks} />

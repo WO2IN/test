@@ -1,6 +1,8 @@
 'use client'
 
 import { Input } from '@/components/ui/input'
+import { CellSelect } from '@/components/cell-select'
+import { STAFF_CYCLES } from '@/lib/constants/check-catalog'
 
 export interface InspectorManagerValue {
   inspectorName: string
@@ -14,10 +16,10 @@ export interface InspectorManagerValue {
 export const EMPTY_INSPECTOR_MANAGER_VALUE: InspectorManagerValue = {
   inspectorName: '',
   inspectorDesc: '',
-  inspectorCycle: '',
+  inspectorCycle: '1회/일',
   managerName: '',
   managerDesc: '',
-  managerCycle: '',
+  managerCycle: '1회/주',
 }
 
 interface InspectorManagerFieldsProps {
@@ -27,8 +29,8 @@ interface InspectorManagerFieldsProps {
 }
 
 const ROWS = [
-  { prefix: 'inspector' as const, label: '점검자', namePlaceholder: '예: 우데스 과장', descPlaceholder: '예: 1일 점검', cyclePlaceholder: '1회/일' },
-  { prefix: 'manager' as const, label: '관리자', namePlaceholder: '예: 문명선 차장', descPlaceholder: '예: 주간 점검 확인', cyclePlaceholder: '1회/주' },
+  { prefix: 'inspector' as const, label: '점검자', namePlaceholder: '예: 우데스 과장', descPlaceholder: '예: 1일 점검' },
+  { prefix: 'manager' as const, label: '관리자', namePlaceholder: '예: 문명선 차장', descPlaceholder: '예: 주간 점검 확인' },
 ]
 
 export function InspectorManagerFields({ value, onChange, onCommit }: InspectorManagerFieldsProps) {
@@ -73,13 +75,16 @@ export function InspectorManagerFields({ value, onChange, onCommit }: InspectorM
                     className="print-compact-input h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
                   />
                 </td>
-                <td className="border-b border-border p-0">
-                  <Input
-                    value={value[cycleKey]}
-                    onChange={(e) => handleChange(cycleKey, e.target.value)}
-                    onBlur={(e) => onCommit?.(cycleKey, e.target.value)}
-                    placeholder={row.cyclePlaceholder}
-                    className="print-compact-input h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0"
+                <td className="w-28 border-b border-border p-0">
+                  <CellSelect
+                    aria-label={`${row.label} 주기`}
+                    value={value[cycleKey] || (row.prefix === 'inspector' ? '1회/일' : '1회/주')}
+                    options={STAFF_CYCLES}
+                    onChange={(next) => {
+                      handleChange(cycleKey, next)
+                      onCommit?.(cycleKey, next)
+                    }}
+                    className="h-9"
                   />
                 </td>
               </tr>

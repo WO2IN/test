@@ -13,6 +13,7 @@ export interface Store {
   equipment: any[]
   equipmentPhotos: any[]
   fiveSTargets: any[]
+  fiveSCheckItems: any[]
   fiveSSheets: any[]
   fiveSEntries: any[]
   dailyCheckItems: any[]
@@ -35,6 +36,7 @@ function emptyStore(): Store {
     equipment: [],
     equipmentPhotos: [],
     fiveSTargets: [],
+    fiveSCheckItems: [],
     fiveSSheets: [],
     fiveSEntries: [],
     dailyCheckItems: [],

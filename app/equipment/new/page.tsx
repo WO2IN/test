@@ -115,6 +115,7 @@ export default function NewEquipmentPage() {
       }
 
       toast.success('설비가 등록되었습니다.')
+      router.refresh()
       router.push(`/equipment/${created.id}`)
     } catch (error) {
       console.error('[v0] create equipment error:', error)

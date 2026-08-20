@@ -69,6 +69,7 @@ export async function updateEquipment(id: number, data: Partial<EquipmentInput>)
   })
   revalidatePath("/equipment")
   revalidatePath(`/equipment/${id}`)
+  revalidatePath("/checksheets/daily")
 }
 
 export async function deleteEquipment(id: number) {
@@ -76,10 +77,18 @@ export async function deleteEquipment(id: number) {
   for (const photo of photos) {
     deleteLocalUpload(photo.url)
   }
+  const sheets = selectWhere("dailyCheckSheets", (s) => s.equipmentId === id)
+  const sheetIds = new Set(sheets.map((s) => s.id))
+  removeWhere("dailyCheckEntries", (e) => sheetIds.has(e.sheetId))
+  removeWhere("dailyCheckIssues", (i) => sheetIds.has(i.sheetId))
+  removeWhere("dailyCheckSheets", (s) => s.equipmentId === id)
+  removeWhere("equipmentEmergencyGuides", (i) => i.equipmentId === id)
+  removeWhere("equipmentEmergencyHistories", (i) => i.equipmentId === id)
   removeWhere("equipmentPhotos", (p) => p.equipmentId === id)
   removeWhere("dailyCheckItems", (i) => i.equipmentId === id)
   removeWhere("equipment", (e) => e.id === id)
   revalidatePath("/equipment")
+  revalidatePath("/checksheets/daily")
 }
 
 export async function getEquipmentPhotos(equipmentId: number) {

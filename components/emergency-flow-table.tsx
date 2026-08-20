@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { PlusIcon, Trash2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,6 +42,35 @@ interface EmergencyFlowTableProps {
 
 const cellInputClass =
   'print-compact-input h-9 rounded-none border-0 text-center shadow-none focus-visible:ring-0'
+
+function CellInput({
+  value,
+  disabled,
+  onCommit,
+}: {
+  value: string
+  disabled?: boolean
+  onCommit: (value: string) => void
+}) {
+  const [draft, setDraft] = useState(value)
+
+  useEffect(() => {
+    setDraft(value)
+  }, [value])
+
+  return (
+    <Input
+      value={draft}
+      disabled={disabled}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={(e) => {
+        if (disabled) return
+        onCommit(e.target.value)
+      }}
+      className={cellInputClass}
+    />
+  )
+}
 
 export function EmergencyFlowTable({
   guides,
@@ -215,25 +244,16 @@ export function EmergencyFlowTable({
                    ================================================= */}
                 <td className="border-r border-b border-border p-0">
                   <div className="relative h-full group">
-                    <Input
-                      defaultValue={
-                        row.guide?.emergencyType ?? ''
-                      }
+                    <CellInput
+                      key={`guide-type-${row.guide?.id ?? `empty-${index}`}`}
+                      value={row.guide?.emergencyType ?? ''}
                       disabled={!row.guide}
-                      onBlur={(e) => {
+                      onCommit={(value) => {
                         if (!row.guide) return
-
                         startTransition(() =>
-                          onUpdateGuide(
-                            row.guide!.id,
-                            {
-                              emergencyType:
-                                e.target.value,
-                            },
-                          ),
+                          onUpdateGuide(row.guide!.id, { emergencyType: value }),
                         )
                       }}
-                      className={cellInputClass}
                     />
 
                     {/* 이상발생 */}
@@ -261,25 +281,16 @@ export function EmergencyFlowTable({
                     조치사항
                    ================================================= */}
                 <td className="border-r border-b border-border p-0">
-                  <Input
-                    defaultValue={
-                      row.guide?.emergencyAction ?? ''
-                    }
+                  <CellInput
+                    key={`guide-action-${row.guide?.id ?? `empty-${index}`}`}
+                    value={row.guide?.emergencyAction ?? ''}
                     disabled={!row.guide}
-                    onBlur={(e) => {
+                    onCommit={(value) => {
                       if (!row.guide) return
-
                       startTransition(() =>
-                        onUpdateGuide(
-                          row.guide!.id,
-                          {
-                            emergencyAction:
-                              e.target.value,
-                          },
-                        ),
+                        onUpdateGuide(row.guide!.id, { emergencyAction: value }),
                       )
                     }}
-                    className={cellInputClass}
                   />
                 </td>
 
@@ -302,25 +313,16 @@ export function EmergencyFlowTable({
                     발생 일자
                    ================================================= */}
                 <td className="border-r border-b border-border p-0">
-                  <Input
-                    defaultValue={
-                      row.history?.occurredDate ?? ''
-                    }
+                  <CellInput
+                    key={`history-occurred-${row.history?.id ?? `empty-${index}`}`}
+                    value={row.history?.occurredDate ?? ''}
                     disabled={!row.history}
-                    onBlur={(e) => {
+                    onCommit={(value) => {
                       if (!row.history) return
-
                       startTransition(() =>
-                        onUpdateHistory(
-                          row.history!.id,
-                          {
-                            occurredDate:
-                              e.target.value,
-                          },
-                        ),
+                        onUpdateHistory(row.history!.id, { occurredDate: value }),
                       )
                     }}
-                    className={cellInputClass}
                   />
                 </td>
 
@@ -328,24 +330,16 @@ export function EmergencyFlowTable({
                     고장 원인
                    ================================================= */}
                 <td className="border-r border-b border-border p-0">
-                  <Input
-                    defaultValue={
-                      row.history?.cause ?? ''
-                    }
+                  <CellInput
+                    key={`history-cause-${row.history?.id ?? `empty-${index}`}`}
+                    value={row.history?.cause ?? ''}
                     disabled={!row.history}
-                    onBlur={(e) => {
+                    onCommit={(value) => {
                       if (!row.history) return
-
                       startTransition(() =>
-                        onUpdateHistory(
-                          row.history!.id,
-                          {
-                            cause: e.target.value,
-                          },
-                        ),
+                        onUpdateHistory(row.history!.id, { cause: value }),
                       )
                     }}
-                    className={cellInputClass}
                   />
                 </td>
 
@@ -353,24 +347,16 @@ export function EmergencyFlowTable({
                     조치 내용
                    ================================================= */}
                 <td className="border-r border-b border-border p-0">
-                  <Input
-                    defaultValue={
-                      row.history?.action ?? ''
-                    }
+                  <CellInput
+                    key={`history-action-${row.history?.id ?? `empty-${index}`}`}
+                    value={row.history?.action ?? ''}
                     disabled={!row.history}
-                    onBlur={(e) => {
+                    onCommit={(value) => {
                       if (!row.history) return
-
                       startTransition(() =>
-                        onUpdateHistory(
-                          row.history!.id,
-                          {
-                            action: e.target.value,
-                          },
-                        ),
+                        onUpdateHistory(row.history!.id, { action: value }),
                       )
                     }}
-                    className={cellInputClass}
                   />
                 </td>
 
@@ -378,25 +364,16 @@ export function EmergencyFlowTable({
                     처리 일자
                    ================================================= */}
                 <td className="border-r border-b border-border p-0">
-                  <Input
-                    defaultValue={
-                      row.history?.processedDate ?? ''
-                    }
+                  <CellInput
+                    key={`history-processed-${row.history?.id ?? `empty-${index}`}`}
+                    value={row.history?.processedDate ?? ''}
                     disabled={!row.history}
-                    onBlur={(e) => {
+                    onCommit={(value) => {
                       if (!row.history) return
-
                       startTransition(() =>
-                        onUpdateHistory(
-                          row.history!.id,
-                          {
-                            processedDate:
-                              e.target.value,
-                          },
-                        ),
+                        onUpdateHistory(row.history!.id, { processedDate: value }),
                       )
                     }}
-                    className={cellInputClass}
                   />
                 </td>
 
@@ -404,24 +381,16 @@ export function EmergencyFlowTable({
                     비고
                    ================================================= */}
                 <td className="border-b border-border p-0">
-                  <Input
-                    defaultValue={
-                      row.history?.note ?? ''
-                    }
+                  <CellInput
+                    key={`history-note-${row.history?.id ?? `empty-${index}`}`}
+                    value={row.history?.note ?? ''}
                     disabled={!row.history}
-                    onBlur={(e) => {
+                    onCommit={(value) => {
                       if (!row.history) return
-
                       startTransition(() =>
-                        onUpdateHistory(
-                          row.history!.id,
-                          {
-                            note: e.target.value,
-                          },
-                        ),
+                        onUpdateHistory(row.history!.id, { note: value }),
                       )
                     }}
-                    className={cellInputClass}
                   />
                 </td>
 

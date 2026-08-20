@@ -11,15 +11,54 @@ export async function getTempHumidityTargetById(id: number) {
   return findOne("tempHumidityTargets", (t: any) => t.id === id)
 }
 
-export async function createTempHumidityTarget(data: { name: string; department?: string; manager?: string; standard?: string }) {
-  const result = insertRow("tempHumidityTargets", { ...data, createdAt: new Date().toISOString() })
+export async function createTempHumidityTarget(data: {
+  name: string
+  department?: string
+  manager?: string
+  standard?: string
+  tempLower?: number | null
+  tempUpper?: number | null
+  humidityLower?: number | null
+  humidityUpper?: number | null
+}) {
+  const result = insertRow("tempHumidityTargets", {
+    tempLower: 10,
+    tempUpper: 30,
+    humidityLower: 0,
+    humidityUpper: 60,
+    ...data,
+    createdAt: new Date().toISOString(),
+  })
   revalidatePath("/checksheets/temp-humidity")
   return result
 }
 
-export async function updateTempHumidityTarget(id: number, data: { name?: string; department?: string; manager?: string; standard?: string }) {
+export async function deleteTempHumidityTarget(id: number) {
+  const sheets = selectWhere("tempHumiditySheets", (s: any) => s.targetId === id)
+  const sheetIds = new Set(sheets.map((s: any) => s.id))
+  removeWhere("tempHumidityEntries", (e: any) => sheetIds.has(e.sheetId))
+  removeWhere("tempHumidityIssues", (i: any) => sheetIds.has(i.sheetId) || i.targetId === id)
+  removeWhere("tempHumiditySheets", (s: any) => s.targetId === id)
+  removeWhere("tempHumidityTargets", (t: any) => t.id === id)
+  revalidatePath("/checksheets/temp-humidity")
+}
+
+export async function updateTempHumidityTarget(
+  id: number,
+  data: {
+    name?: string
+    department?: string
+    manager?: string
+    standard?: string
+    tempLower?: number | null
+    tempUpper?: number | null
+    humidityLower?: number | null
+    humidityUpper?: number | null
+  },
+) {
   const result = updateById("tempHumidityTargets", id, data)
   revalidatePath("/checksheets/temp-humidity")
+  revalidatePath(`/checksheets/temp-humidity/${id}`)
   return result
 }
 
@@ -58,31 +97,35 @@ export async function upsertTempHumidityEntry(
     insertRow("tempHumidityEntries", { sheetId, day, ...fields })
   }
   revalidatePath("/checksheets/temp-humidity")
+  revalidatePath("/checksheets/temp-humidity/[targetId]", "layout")
 }
 
 export async function bulkUpsertTempHumidityEntries(
   sheetId: number,
-  entries: { day: number; temperature: string; humidity: string }[],
+  entries: { day: number; temperature: string; humidity: string; checker?: string | null }[],
 ) {
-  for (const { day, temperature, humidity } of entries) {
+  for (const { day, temperature, humidity, checker } of entries) {
     const existing = findOne("tempHumidityEntries", (e: any) => e.sheetId === sheetId && e.day === day)
     if (existing) {
       const patch: Record<string, string> = {}
       if (!(existing as any).temperature) patch.temperature = temperature
       if (!(existing as any).humidity) patch.humidity = humidity
+      if (checker && !(existing as any).checker) patch.checker = checker
       if (Object.keys(patch).length > 0) {
         updateById("tempHumidityEntries", (existing as any).id, patch)
       }
     } else {
-      insertRow("tempHumidityEntries", { sheetId, day, temperature, humidity, checker: null })
+      insertRow("tempHumidityEntries", { sheetId, day, temperature, humidity, checker: checker ?? null })
     }
   }
   revalidatePath("/checksheets/temp-humidity")
+  revalidatePath("/checksheets/temp-humidity/[targetId]", "layout")
 }
 
 export async function clearTempHumidityEntries(sheetId: number) {
   removeWhere("tempHumidityEntries", (e: any) => e.sheetId === sheetId)
   revalidatePath("/checksheets/temp-humidity")
+  revalidatePath("/checksheets/temp-humidity/[targetId]", "layout")
 }
 
 export async function updateTempHumiditySheetFields(
@@ -91,4 +134,15 @@ export async function updateTempHumiditySheetFields(
 ) {
   updateById("tempHumiditySheets", sheetId, fields)
   revalidatePath("/checksheets/temp-humidity")
+  revalidatePath("/checksheets/temp-humidity/[targetId]", "layout")
+}
+
+export async function toggleTempHumidityHoliday(sheetId: number, day: number) {
+  const sheet = findOne<any>("tempHumiditySheets", (s: any) => s.id === sheetId)
+  const current: number[] = sheet?.holidays ?? []
+  const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day].sort((a, b) => a - b)
+  updateById("tempHumiditySheets", sheetId, { holidays: next })
+  revalidatePath("/checksheets/temp-humidity")
+  revalidatePath("/checksheets/temp-humidity/[targetId]", "layout")
+  return next
 }
