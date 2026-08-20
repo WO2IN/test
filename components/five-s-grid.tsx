@@ -302,7 +302,7 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
                   <th
                     key={day}
                     className={cn(
-                      'print-day-cell h-7 w-8 border-r border-b border-border p-0 text-xs font-medium last:border-r-0',
+                      'print-day-cell h-7 print:h-5 w-8 border-r border-b border-border p-0 text-xs print:text-[10px] font-medium last:border-r-0',
                       (weekend || holiday) && 'weekend-cell bg-muted-foreground/10',
                     )}
                   >
@@ -325,12 +325,12 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
                       {category}
                     </td>
                   )}
-                  <td className="print-content-cell border-r border-b border-border p-1.5 text-left">
+                  <td className="print-content-cell border-r border-b border-border p-1.5 print:p-0 text-left">
                     <Input
                       defaultValue={item.content}
                       aria-label={`${category} ${item.no}번 점검 내용`}
                       onBlur={(event) => handleItemFieldBlur(item, 'content', event.currentTarget.value)}
-                      className="h-8 rounded-none border-0 bg-transparent px-1 text-xs shadow-none focus-visible:ring-1"
+                      className="h-8 print:h-5 rounded-none border-0 bg-transparent px-1 text-xs print:text-[10px] shadow-none focus-visible:ring-1"
                     />
                   </td>
                   <td className="print-cycle-cell border-r border-b border-border p-0 text-center">
@@ -364,25 +364,25 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
                           handleCellClick(item, day)
                         }}
                         className={cn(
-                          'print-day-cell relative h-8 w-8 border-r border-b border-border p-0 text-center text-xs font-medium last:border-r-0',
-
+                          'print-day-cell relative h-8 print:h-5 w-8 border-r border-b border-border p-0 text-center text-xs print:text-[10px] font-medium last:border-r-0',
+                        
                           dayOff &&
                             'weekend-cell cursor-not-allowed bg-muted-foreground/10',
-
+                        
                           !dayOff &&
                             hasNA &&
                             !isNACell &&
                             'cursor-not-allowed bg-red-50',
-
+                        
                           !dayOff &&
                             !hasNA &&
                             'cursor-pointer hover:bg-accent/30',
-
+                        
                           monthlyHighlight &&
                             !dayOff &&
                             !hasNA &&
                             'monthly-cell bg-accent/70',
-
+                        
                           hasNA &&
                             'after:pointer-events-none after:absolute after:left-0 after:right-0 after:top-1/2 after:h-[2px] after:bg-red-500',
                         )}
