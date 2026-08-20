@@ -13,7 +13,6 @@ import { ApprovalBox } from '@/components/approval-box'
 import { RemarksField } from '@/components/remarks-field'
 import { PrintButton } from '@/components/print-button'
 import { FiveSGrid } from '@/components/five-s-grid'
-import { FiveSItemManager } from '@/components/five-s-item-manager'
 import { currentYearMonth } from '@/lib/date-utils'
 import { notFound } from 'next/navigation'
 import { SheetHeaderEditor } from '@/components/sheet-header-editor'
@@ -61,7 +60,6 @@ export default async function FiveSPage({
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
           <YearMonthPicker year={year} month={month} />
           <div className="flex items-center gap-2">
-            <FiveSItemManager targetId={tId} items={items as any} />
             <PrintButton />
           </div>
         </div>

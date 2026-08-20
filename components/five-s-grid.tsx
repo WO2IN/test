@@ -4,9 +4,15 @@ import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } fr
 import { cn } from '@/lib/utils'
 import { getDayRange, isWeekend } from '@/lib/date-utils'
 import { FIVE_S_CATEGORIES, FIVE_S_SYMBOLS } from '@/lib/constants/five-s-catalog'
-import { upsertFiveSEntry, bulkFillFiveSEntries, clearFiveSSheetEntries } from '@/app/actions/five-s'
+import {
+  upsertFiveSEntry,
+  bulkFillFiveSEntries,
+  clearFiveSSheetEntries,
+  updateFiveSCheckItem,
+} from '@/app/actions/five-s'
 import { Trash2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { HolidayPickerPopover } from '@/components/holiday-picker-popover'
 import { RangeFillPopover } from '@/components/range-fill-popover'
 import {
@@ -23,6 +29,7 @@ import {
 
 export interface FiveSCheckItem {
   id: number
+  targetId: number
   code: string
   category: string
   no: number
@@ -102,6 +109,13 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
     }
   }, [])
 
+  function handleItemFieldBlur(item: FiveSCheckItem, field: 'content' | 'cycle', value: string) {
+    if (value === item[field]) return
+    startTransition(() => {
+      updateFiveSCheckItem(item.id, item.targetId, { [field]: value })
+    })
+  }
+
   function handleCellClick(item: FiveSCheckItem, day: number) {
     if (isDayOff(day)) return
     const key = `${item.code}-${day}`
@@ -117,7 +131,8 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
     if (isDayOff(day)) return false
     if (item.cycle === '일') return true
     if (item.cycle === '주') return new Date(year, month - 1, day).getDay() === 1
-    return day === Array.from({ length: day }, (_, index) => index + 1).find((candidate) => !isDayOff(candidate))
+    if (item.cycle === '월') return day === Array.from({ length: day }, (_, index) => index + 1).find((candidate) => !isDayOff(candidate))
+    return false
   }
 
   function handleBulkFill(fromDay: number, toDay: number) {
@@ -215,7 +230,7 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
             <AlertDialogHeader>
               <AlertDialogTitle>이번 달 체크 내용을 모두 지울까요?</AlertDialogTitle>
               <AlertDialogDescription>
-                {year}년 {month}월 3정 5S Check Sheet에 입력된 모든 표시가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                {year}년 {month}월 3정 5S Check Sheet에 입력된 모든 표시가 삭제됩니다. 이 작업은 되돌릴 수 ���습니다.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -292,9 +307,21 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
                       {category}
                     </td>
                   )}
-                  <td className="print-content-cell border-r border-b border-border p-1.5 text-left">{item.content}</td>
-                  <td className="print-cycle-cell border-r border-b border-border p-1 text-center text-muted-foreground">
-                    {item.cycle}
+                  <td className="print-content-cell border-r border-b border-border p-1.5 text-left">
+                    <Input
+                      defaultValue={item.content}
+                      aria-label={`${category} ${item.no}번 점검 내용`}
+                      onBlur={(event) => handleItemFieldBlur(item, 'content', event.currentTarget.value)}
+                      className="h-8 rounded-none border-0 bg-transparent px-1 text-xs shadow-none focus-visible:ring-1"
+                    />
+                  </td>
+                  <td className="print-cycle-cell border-r border-b border-border p-1 text-center">
+                    <Input
+                      defaultValue={item.cycle}
+                      aria-label={`${category} ${item.no}번 주기`}
+                      onBlur={(event) => handleItemFieldBlur(item, 'cycle', event.currentTarget.value)}
+                      className="h-8 w-full rounded-none border-0 bg-transparent px-1 text-center text-xs shadow-none focus-visible:ring-1"
+                    />
                   </td>
                   {days.map((day) => {
                     const key = `${item.code}-${day}`
