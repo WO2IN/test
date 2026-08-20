@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { findOne, insertRow, removeWhere, selectWhere, updateById, selectAll } from "@/lib/local-store"
 import { FIVE_S_CATALOG } from "@/lib/constants/five-s-catalog"
-import { isWeekend } from "@/lib/date-utils"
+import { isWeekend, scheduledDaysForCycle } from "@/lib/date-utils"
 
 export async function getFiveSTargets() {
   return selectAll("fiveSTargets")
@@ -155,21 +155,31 @@ export async function bulkFillFiveSEntries(
   const startDay = Math.max(1, fromDay)
 
   for (const item of items) {
-    for (let day = startDay; day <= uptoDay; day++) {
-      if (isDayOff(day)) continue
-      const scheduled = item.cycle === '일'
-        || (item.cycle === '주' && new Date(year, month - 1, day).getDay() === 1)
-        || (item.cycle === '월' && day === Array.from({ length: day }, (_, index) => index + 1).find((candidate) => !isDayOff(candidate)))
-      if (!scheduled) continue
+    const scheduledDays = scheduledDaysForCycle(
+      year,
+      month,
+      startDay,
+      uptoDay,
+      item.cycle,
+      isDayOff,
+    )
+  
+    for (const day of scheduledDays) {
       const existing = findOne(
         "fiveSEntries",
         (e: any) => e.sheetId === sheetId && e.itemCode === item.code && e.day === day,
       )
+  
       if (!existing || !(existing as any).value) {
         if (existing) {
           updateById("fiveSEntries", (existing as any).id, { value: symbol })
         } else {
-          insertRow("fiveSEntries", { sheetId, itemCode: item.code, day, value: symbol })
+          insertRow("fiveSEntries", {
+            sheetId,
+            itemCode: item.code,
+            day,
+            value: symbol,
+          })
         }
       }
     }

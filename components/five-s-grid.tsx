@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
-import { getDayRange, isWeekend } from '@/lib/date-utils'
+import { getDayRange, isWeekend, scheduledDaysForCycle } from '@/lib/date-utils'
 import { FIVE_S_CATEGORIES, FIVE_S_SYMBOLS } from '@/lib/constants/five-s-catalog'
 import {
   upsertFiveSEntry,
@@ -13,6 +13,7 @@ import {
 import { Trash2Icon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { CellSelect } from '@/components/cell-select'
 import { HolidayPickerPopover } from '@/components/holiday-picker-popover'
 import { RangeFillPopover } from '@/components/range-fill-popover'
 import {
@@ -118,9 +119,19 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
 
   function handleCellClick(item: FiveSCheckItem, day: number) {
     if (isDayOff(day)) return
+  
     const key = `${item.code}-${day}`
     const current = optimisticEntries.get(key) ?? ''
+  
+    const hasNA = days.some(
+      (d) => optimisticEntries.get(`${item.code}-${d}`) === 'N/A'
+    )
+  
+    // N/A가 이미 있으면 N/A가 들어있는 칸만 다시 클릭 가능
+    if (hasNA && current !== 'N/A') return
+  
     const next = current === selectedSymbol ? '' : selectedSymbol
+  
     startTransition(() => {
       setOptimisticEntry({ key, value: next })
       upsertFiveSEntry(sheetId, item.code, day, next)
@@ -129,10 +140,17 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
 
   function isScheduledDay(item: FiveSCheckItem, day: number) {
     if (isDayOff(day)) return false
-    if (item.cycle === '일') return true
-    if (item.cycle === '주') return new Date(year, month - 1, day).getDay() === 1
-    if (item.cycle === '월') return day === Array.from({ length: day }, (_, index) => index + 1).find((candidate) => !isDayOff(candidate))
-    return false
+  
+    const scheduledDays = scheduledDaysForCycle(
+      year,
+      month,
+      1,
+      days.length,
+      item.cycle || '일',
+      isDayOff,
+    )
+  
+    return scheduledDays.includes(day)
   }
 
   function handleBulkFill(fromDay: number, toDay: number) {
@@ -230,7 +248,7 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
             <AlertDialogHeader>
               <AlertDialogTitle>이번 달 체크 내용을 모두 지울까요?</AlertDialogTitle>
               <AlertDialogDescription>
-                {year}년 {month}월 3정 5S Check Sheet에 입력된 모든 표시가 삭제됩니다. 이 작업은 되돌릴 수 ���습니다.
+                {year}년 {month}월 3정 5S Check Sheet에 입력된 모든 표시가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -315,27 +333,58 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
                       className="h-8 rounded-none border-0 bg-transparent px-1 text-xs shadow-none focus-visible:ring-1"
                     />
                   </td>
-                  <td className="print-cycle-cell border-r border-b border-border p-1 text-center">
-                    <Input
-                      defaultValue={item.cycle}
+                  <td className="print-cycle-cell border-r border-b border-border p-0 text-center">
+                    <CellSelect
                       aria-label={`${category} ${item.no}번 주기`}
-                      onBlur={(event) => handleItemFieldBlur(item, 'cycle', event.currentTarget.value)}
-                      className="h-8 w-full rounded-none border-0 bg-transparent px-1 text-center text-xs shadow-none focus-visible:ring-1"
+                      value={item.cycle || '일'}
+                      options={['일', '주', '월']}
+                      onChange={(value) => {
+                        handleItemFieldBlur(item, 'cycle', value)
+                      }}
                     />
                   </td>
                   {days.map((day) => {
                     const key = `${item.code}-${day}`
                     const value = optimisticEntries.get(key) ?? ''
                     const dayOff = isDayOff(day)
+
+                    const hasNA = days.some(
+                      (d) => optimisticEntries.get(`${item.code}-${d}`) === 'N/A'
+                    )
+
+                    const isNACell = value === 'N/A'
                     const monthlyHighlight = item.cycle === '월'
+
                     return (
                       <td
                         key={day}
-                        onClick={() => !dayOff && handleCellClick(item, day)}
+                        onClick={() => {
+                          if (dayOff) return
+                          if (hasNA && !isNACell) return
+                          handleCellClick(item, day)
+                        }}
                         className={cn(
-                          'print-day-cell h-8 w-8 border-r border-b border-border p-0 text-center text-xs font-medium last:border-r-0',
-                          dayOff ? 'weekend-cell bg-muted-foreground/10 cursor-not-allowed' : 'cursor-pointer hover:bg-accent/30',
-                          monthlyHighlight && !dayOff && 'monthly-cell bg-accent/70',
+                          'print-day-cell relative h-8 w-8 border-r border-b border-border p-0 text-center text-xs font-medium last:border-r-0',
+
+                          dayOff &&
+                            'weekend-cell cursor-not-allowed bg-muted-foreground/10',
+
+                          !dayOff &&
+                            hasNA &&
+                            !isNACell &&
+                            'cursor-not-allowed bg-red-50',
+
+                          !dayOff &&
+                            !hasNA &&
+                            'cursor-pointer hover:bg-accent/30',
+
+                          monthlyHighlight &&
+                            !dayOff &&
+                            !hasNA &&
+                            'monthly-cell bg-accent/70',
+
+                          hasNA &&
+                            'after:pointer-events-none after:absolute after:left-0 after:right-0 after:top-1/2 after:h-[2px] after:bg-red-500',
                         )}
                       >
                         {dayOff ? '' : value}

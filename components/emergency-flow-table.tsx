@@ -191,7 +191,6 @@ export function EmergencyFlowTable({
                 점검담당자 &nbsp;--&gt;&nbsp; 생산팀장
                 </th>
 
-              {/* ??�� 버튼 ?�역 */}
               <th className="no-print w-10 border-b border-border bg-muted p-2" />
             </tr>
 
@@ -232,7 +231,6 @@ export function EmergencyFlowTable({
                 비 고
               </th>
 
-              {/* ??�� 버튼 */}
               <th className="no-print w-10 border-b border-border bg-muted/70 p-2" />
             </tr>
           
