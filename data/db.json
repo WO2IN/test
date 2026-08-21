@@ -10,9 +10,23 @@
       "inspectorCycle": "1회/일",
       "managerName": "문명선 차장",
       "managerDesc": "주간 점검",
-      "managerCycle": "1회/월",
+      "managerCycle": "1회/주",
       "escalationNote": null,
       "createdAt": "2026-08-20T01:04:52.403Z"
+    },
+    {
+      "id": 3,
+      "name": "3층 검사실",
+      "department": "품질관리부",
+      "manager": "조승현 부장",
+      "inspectorName": "나우인 주임",
+      "inspectorDesc": "1일 점검",
+      "inspectorCycle": "1회/일",
+      "managerName": "조승현 부장",
+      "managerDesc": "주간 점검 확인",
+      "managerCycle": "1회/주",
+      "escalationNote": null,
+      "createdAt": "2026-08-21T05:47:09.371Z"
     }
   ],
   "equipmentPhotos": [
@@ -79,6 +93,46 @@
       "label": "7",
       "sortOrder": 0,
       "createdAt": "2026-08-20T01:04:53.484Z"
+    },
+    {
+      "id": 14,
+      "equipmentId": 3,
+      "url": "/uploads/equipment-photos/1787291229406-__1.jpg",
+      "label": "전체 전경",
+      "sortOrder": 0,
+      "createdAt": "2026-08-21T05:47:09.436Z"
+    },
+    {
+      "id": 15,
+      "equipmentId": 3,
+      "url": "/uploads/equipment-photos/1787291229469-__2.jpg",
+      "label": "1",
+      "sortOrder": 0,
+      "createdAt": "2026-08-21T05:47:09.496Z"
+    },
+    {
+      "id": 16,
+      "equipmentId": 3,
+      "url": "/uploads/equipment-photos/1787291229531-__3.jpg",
+      "label": "2",
+      "sortOrder": 0,
+      "createdAt": "2026-08-21T05:47:09.558Z"
+    },
+    {
+      "id": 17,
+      "equipmentId": 3,
+      "url": "/uploads/equipment-photos/1787291229594-__4.jpg",
+      "label": "3",
+      "sortOrder": 0,
+      "createdAt": "2026-08-21T05:47:09.619Z"
+    },
+    {
+      "id": 18,
+      "equipmentId": 3,
+      "url": "/uploads/equipment-photos/1787291229650-__5.jpg",
+      "label": "4",
+      "sortOrder": 0,
+      "createdAt": "2026-08-21T05:47:09.676Z"
     }
   ],
   "fiveSTargets": [
@@ -2590,6 +2644,51 @@
       "method": "육안",
       "cycle": "일",
       "sortOrder": 9
+    },
+    {
+      "id": 15,
+      "equipmentId": 3,
+      "itemNo": 1,
+      "content": "전원상태 확인",
+      "method": "육안",
+      "cycle": "일",
+      "sortOrder": 1
+    },
+    {
+      "id": 16,
+      "equipmentId": 3,
+      "itemNo": 2,
+      "content": "STAGE 이동(Z, X, Y)상태 확인",
+      "method": "육안",
+      "cycle": "일",
+      "sortOrder": 2
+    },
+    {
+      "id": 17,
+      "equipmentId": 3,
+      "itemNo": 3,
+      "content": "냉각팬 작동상태 확인",
+      "method": "육안",
+      "cycle": "일",
+      "sortOrder": 3
+    },
+    {
+      "id": 18,
+      "equipmentId": 3,
+      "itemNo": 4,
+      "content": "프로그램 작동유무 확인",
+      "method": "육안",
+      "cycle": "일",
+      "sortOrder": 4
+    },
+    {
+      "id": 19,
+      "equipmentId": 3,
+      "itemNo": 5,
+      "content": "표준시편 교정",
+      "method": "측정",
+      "cycle": "일",
+      "sortOrder": 5
     }
   ],
   "dailyCheckSheets": [
@@ -2625,7 +2724,48 @@
         24
       ],
       "managerMarks": [
-        3
+        3,
+        10,
+        18,
+        24
+      ]
+    },
+    {
+      "id": 2,
+      "equipmentId": 3,
+      "year": 2026,
+      "month": 8,
+      "department": "품질관리부",
+      "manager": "조승현 부장",
+      "writer": null,
+      "reviewer": null,
+      "approver": null,
+      "createdAt": "2026-08-21T05:48:01.061Z",
+      "holidays": [
+        17
+      ],
+      "inspectorMarks": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        10,
+        11,
+        12,
+        13,
+        14,
+        18,
+        19,
+        20,
+        21,
+        24
+      ],
+      "managerMarks": [
+        3,
+        10,
+        18,
+        24
       ]
     }
   ],
@@ -3574,6 +3714,538 @@
       "itemId": 9,
       "day": 24,
       "value": "O"
+    },
+    {
+      "id": 1360,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 31,
+      "value": ""
+    },
+    {
+      "id": 1361,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 3,
+      "value": "O"
+    },
+    {
+      "id": 1362,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 4,
+      "value": "O"
+    },
+    {
+      "id": 1363,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 5,
+      "value": "O"
+    },
+    {
+      "id": 1364,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 6,
+      "value": "O"
+    },
+    {
+      "id": 1365,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 7,
+      "value": "O"
+    },
+    {
+      "id": 1366,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 10,
+      "value": "O"
+    },
+    {
+      "id": 1367,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 11,
+      "value": "O"
+    },
+    {
+      "id": 1368,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 12,
+      "value": "O"
+    },
+    {
+      "id": 1369,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 13,
+      "value": "O"
+    },
+    {
+      "id": 1370,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 14,
+      "value": "O"
+    },
+    {
+      "id": 1371,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 18,
+      "value": "O"
+    },
+    {
+      "id": 1372,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 19,
+      "value": "O"
+    },
+    {
+      "id": 1373,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 20,
+      "value": "O"
+    },
+    {
+      "id": 1374,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 21,
+      "value": "O"
+    },
+    {
+      "id": 1375,
+      "sheetId": 2,
+      "itemId": 15,
+      "day": 24,
+      "value": "O"
+    },
+    {
+      "id": 1376,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 3,
+      "value": "O"
+    },
+    {
+      "id": 1377,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 4,
+      "value": "O"
+    },
+    {
+      "id": 1378,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 5,
+      "value": "O"
+    },
+    {
+      "id": 1379,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 6,
+      "value": "O"
+    },
+    {
+      "id": 1380,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 7,
+      "value": "O"
+    },
+    {
+      "id": 1381,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 10,
+      "value": "O"
+    },
+    {
+      "id": 1382,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 11,
+      "value": "O"
+    },
+    {
+      "id": 1383,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 12,
+      "value": "O"
+    },
+    {
+      "id": 1384,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 13,
+      "value": "O"
+    },
+    {
+      "id": 1385,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 14,
+      "value": "O"
+    },
+    {
+      "id": 1386,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 18,
+      "value": "O"
+    },
+    {
+      "id": 1387,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 19,
+      "value": "O"
+    },
+    {
+      "id": 1388,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 20,
+      "value": "O"
+    },
+    {
+      "id": 1389,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 21,
+      "value": "O"
+    },
+    {
+      "id": 1390,
+      "sheetId": 2,
+      "itemId": 16,
+      "day": 24,
+      "value": "O"
+    },
+    {
+      "id": 1391,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 3,
+      "value": "O"
+    },
+    {
+      "id": 1392,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 4,
+      "value": "O"
+    },
+    {
+      "id": 1393,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 5,
+      "value": "O"
+    },
+    {
+      "id": 1394,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 6,
+      "value": "O"
+    },
+    {
+      "id": 1395,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 7,
+      "value": "O"
+    },
+    {
+      "id": 1396,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 10,
+      "value": "O"
+    },
+    {
+      "id": 1397,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 11,
+      "value": "O"
+    },
+    {
+      "id": 1398,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 12,
+      "value": "O"
+    },
+    {
+      "id": 1399,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 13,
+      "value": "O"
+    },
+    {
+      "id": 1400,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 14,
+      "value": "O"
+    },
+    {
+      "id": 1401,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 18,
+      "value": "O"
+    },
+    {
+      "id": 1402,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 19,
+      "value": "O"
+    },
+    {
+      "id": 1403,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 20,
+      "value": "O"
+    },
+    {
+      "id": 1404,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 21,
+      "value": "O"
+    },
+    {
+      "id": 1405,
+      "sheetId": 2,
+      "itemId": 17,
+      "day": 24,
+      "value": "O"
+    },
+    {
+      "id": 1406,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 3,
+      "value": "O"
+    },
+    {
+      "id": 1407,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 4,
+      "value": "O"
+    },
+    {
+      "id": 1408,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 5,
+      "value": "O"
+    },
+    {
+      "id": 1409,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 6,
+      "value": "O"
+    },
+    {
+      "id": 1410,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 7,
+      "value": "O"
+    },
+    {
+      "id": 1411,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 10,
+      "value": "O"
+    },
+    {
+      "id": 1412,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 11,
+      "value": "O"
+    },
+    {
+      "id": 1413,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 12,
+      "value": "O"
+    },
+    {
+      "id": 1414,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 13,
+      "value": "O"
+    },
+    {
+      "id": 1415,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 14,
+      "value": "O"
+    },
+    {
+      "id": 1416,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 18,
+      "value": "O"
+    },
+    {
+      "id": 1417,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 19,
+      "value": "O"
+    },
+    {
+      "id": 1418,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 20,
+      "value": "O"
+    },
+    {
+      "id": 1419,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 21,
+      "value": "O"
+    },
+    {
+      "id": 1420,
+      "sheetId": 2,
+      "itemId": 18,
+      "day": 24,
+      "value": "O"
+    },
+    {
+      "id": 1421,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 3,
+      "value": "O"
+    },
+    {
+      "id": 1422,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 4,
+      "value": "O"
+    },
+    {
+      "id": 1423,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 5,
+      "value": "O"
+    },
+    {
+      "id": 1424,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 6,
+      "value": "O"
+    },
+    {
+      "id": 1425,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 7,
+      "value": "O"
+    },
+    {
+      "id": 1426,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 10,
+      "value": "O"
+    },
+    {
+      "id": 1427,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 11,
+      "value": "O"
+    },
+    {
+      "id": 1428,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 12,
+      "value": "O"
+    },
+    {
+      "id": 1429,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 13,
+      "value": "O"
+    },
+    {
+      "id": 1430,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 14,
+      "value": "O"
+    },
+    {
+      "id": 1431,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 18,
+      "value": "O"
+    },
+    {
+      "id": 1432,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 19,
+      "value": "O"
+    },
+    {
+      "id": 1433,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 20,
+      "value": "O"
+    },
+    {
+      "id": 1434,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 21,
+      "value": "O"
+    },
+    {
+      "id": 1435,
+      "sheetId": 2,
+      "itemId": 19,
+      "day": 24,
+      "value": "O"
     }
   ],
   "dailyCheckIssues": [],
@@ -3830,11 +4502,11 @@
     "fiveSSheets": 3,
     "fiveSCheckItems": 61,
     "fiveSEntries": 2097,
-    "equipment": 1,
-    "equipmentPhotos": 8,
-    "dailyCheckItems": 9,
+    "equipment": 3,
+    "equipmentPhotos": 18,
+    "dailyCheckItems": 19,
     "equipmentEmergencyGuides": 2,
-    "dailyCheckSheets": 1,
-    "dailyCheckEntries": 1359
+    "dailyCheckSheets": 2,
+    "dailyCheckEntries": 1435
   }
 }
