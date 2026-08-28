@@ -4925,13 +4925,43 @@
       "day": 25,
       "temperature": null,
       "humidity": null
+    },
+    {
+      "id": 73,
+      "sheetId": 1,
+      "day": 25,
+      "temperature": "27",
+      "humidity": "51",
+      "checker": "나"
+    },
+    {
+      "id": 74,
+      "sheetId": 1,
+      "day": 26,
+      "temperature": "26",
+      "humidity": "49",
+      "checker": "나"
+    },
+    {
+      "id": 75,
+      "sheetId": 1,
+      "day": 27,
+      "temperature": "27",
+      "humidity": "51",
+      "checker": "나"
+    },
+    {
+      "id": 76,
+      "sheetId": 1,
+      "day": 28,
+      "temperature": null
     }
   ],
   "tempHumidityIssues": [],
   "_seq": {
     "tempHumidityTargets": 2,
     "tempHumiditySheets": 5,
-    "tempHumidityEntries": 72,
+    "tempHumidityEntries": 76,
     "fiveSTargets": 4,
     "fiveSSheets": 4,
     "fiveSCheckItems": 81,
