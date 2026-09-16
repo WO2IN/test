@@ -156,9 +156,6 @@ export function FiveSGrid({ sheetId, year, month, items, entries, holidays = [],
   function handleBulkFill(fromDay: number, toDay: number) {
     startTransition(() => {
       for (const item of items) {
-        const hasNA = days.some((day) => optimisticEntries.get(`${item.code}-${day}`) === 'N/A')
-        if (hasNA) continue
-
         for (let day = fromDay; day <= toDay; day++) {
           if (!isScheduledDay(item, day)) continue
           const key = `${item.code}-${day}`
