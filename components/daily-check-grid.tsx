@@ -169,7 +169,6 @@ export function DailyCheckGrid({
   }, [])
 
   function handleCellClick(itemId: number, day: number) {
-    if (isDayOff(day)) return
     const key = `${itemId}-${day}`
     const current = optimisticEntries.get(key) ?? ''
     const next = current === selectedSymbol ? '' : selectedSymbol
@@ -204,7 +203,8 @@ export function DailyCheckGrid({
         const scheduled = scheduledDaysForCycle(year, month, fromDay, toDay, item.cycle, isDayOff)
         for (const day of scheduled) {
           const key = `${item.id}-${day}`
-          if (!optimisticEntries.get(key)) {
+          const currentValue = optimisticEntries.get(key)
+          if (!currentValue) {
             setOptimisticEntry({ key, value: selectedSymbol })
           }
         }
@@ -358,7 +358,7 @@ export function DailyCheckGrid({
         </div>
       </div>
       <p className="no-print px-1 text-xs text-muted-foreground">
-        위에서 표시를 선택한 뒤 칸을 클릭하면 바로 입력됩니다. 같은 표시를 다시 클릭하면 지워집니다. 아래 점검자·관리자 칸을 클릭하면 서명됩니다.
+        위에서 표시를 선택한 뒤 칸을 클���하면 바로 입력됩니다. 같은 표시를 다시 클릭하면 지워집니다. 아래 점검자·관리자 칸을 클릭하면 서명됩니다.
       </p>
 
       <div className="print-sheet overflow-x-auto border border-border">
@@ -530,10 +530,10 @@ function CheckItemRow({
             onClick={() => onCellClick(item.id, day)}
             className={cn(
               'print-day-cell h-8 w-8 border-r border-b border-border p-0 text-center text-xs font-medium last:border-r-0',
-              dayOff ? 'weekend-cell bg-muted-foreground/10 cursor-not-allowed' : 'cursor-pointer hover:bg-accent/30',
+              dayOff ? 'weekend-cell bg-muted-foreground/10 cursor-pointer' : 'cursor-pointer hover:bg-accent/30',
             )}
           >
-            {dayOff ? '' : value}
+            {value}
           </td>
         )
       })}

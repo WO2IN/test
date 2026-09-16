@@ -40,9 +40,6 @@ export async function getDailyCheckEntries(sheetId: number) {
 }
 
 export async function upsertDailyCheckEntry(sheetId: number, itemId: number, day: number, value: string) {
-  const sheet = findOne<any>("dailyCheckSheets", (s: any) => s.id === sheetId)
-  if (value && isSheetDayOff(sheet, day)) return
-
   const existing = findOne(
     "dailyCheckEntries",
     (e: any) => e.sheetId === sheetId && e.itemId === itemId && e.day === day,

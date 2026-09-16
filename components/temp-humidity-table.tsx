@@ -133,7 +133,6 @@ export function TempHumidityTable({
   }, [])
 
   function handleBlur(day: number, field: 'temperature' | 'humidity' | 'checker', value: string) {
-    if (isDayOff(day)) return
     startTransition(() => {
       setOptimisticEntry({ day, fields: { [field]: value || null } })
       upsertTempHumidityEntry(sheetId, day, { [field]: value || null })
@@ -386,7 +385,6 @@ export function TempHumidityTable({
                         aria-label={`${day}일 ${field === 'temperature' ? '온도' : '습도'}`}
                         type="number"
                         step="1"
-                        disabled={dayOff}
                         defaultValue={entry?.[field] ?? ''}
                         key={`${field}-${day}-${entry?.[field] ?? ''}`}
                         onBlur={(e) => handleBlur(day, field, e.target.value)}
