@@ -48,7 +48,9 @@ export default async function FiveSIndexPage() {
             {(() => {
               const floors = new Map<string, typeof targetList>()
               for (const item of targetList) {
-                const floor = item.floor?.replace('층', '') || item.name.match(/(\d+)층/)?.[1] || '미지정'
+                const floor = item.floor
+                  ? String(item.floor).replace(/층$/, '')
+                  : item.name.match(/(\d+)층/)?.[1] || '미지정'
                 floors.set(floor, [...(floors.get(floor) ?? []), item])
               }
               const entries = ['1', '2', '3', ...floors.keys()].filter((floor, index, all) => all.indexOf(floor) === index)

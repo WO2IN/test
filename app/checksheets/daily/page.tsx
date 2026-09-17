@@ -45,7 +45,9 @@ export default async function DailyCheckIndexPage() {
             {(() => {
               const floors = new Map<string, typeof equipmentList>()
               for (const item of equipmentList) {
-                const floor = item.floor?.replace('층', '') || item.name.match(/(\d+)층/)?.[1] || '미지정'
+                const floor = item.floor
+      ? String(item.floor).replace(/층$/, '')
+      : item.name.match(/(\d+)층/)?.[1] || '미지정'
                 floors.set(floor, [...(floors.get(floor) ?? []), item])
               }
               const entries = ['1', '2', '3', ...floors.keys()].filter((floor, index, all) => all.indexOf(floor) === index)
