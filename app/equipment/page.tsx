@@ -15,11 +15,9 @@ export default async function EquipmentPage() {
     floorItems.push(item)
     floors.set(detectedFloor, floorItems)
   }
-  const floorEntries = [...floors.entries()].sort(([a], [b]) => {
-    if (a === '미지정') return 1
-    if (b === '미지정') return -1
-    return Number(a) - Number(b)
-  })
+  const floorEntries = ['1', '2', '3', ...[...floors.keys()].filter((floor) => !['1', '2', '3', '미지정'].includes(floor)), '미지정']
+    .filter((floor, index, entries) => entries.indexOf(floor) === index)
+    .map((floor) => [floor, floors.get(floor) ?? []] as const)
 
   return (
     <div className="min-h-screen">
