@@ -44,7 +44,7 @@ export default function NewEquipmentPage() {
   const router = useRouter()
   const [pending, setPending] = useState(false)
 
-  const [basic, setBasic] = useState({ name: '', department: '', manager: '' })
+  const [basic, setBasic] = useState({ name: '', floor: '', department: '', manager: '' })
   const [overviewPhoto, setOverviewPhoto] = useState<File | null>(null)
   const [partPhotos, setPartPhotos] = useState<Record<string, File | null>>({})
   const [checkItems, setCheckItems] = useState<DraftCheckItem[]>([])
@@ -71,6 +71,7 @@ export default function NewEquipmentPage() {
     try {
       const created = await createEquipment({
         name: basic.name,
+        floor: basic.floor,
         department: basic.department,
         manager: basic.manager,
         inspectorName: inspectorManager.inspectorName,
@@ -147,7 +148,7 @@ export default function NewEquipmentPage() {
               <CardTitle>기본 정보</CardTitle>
             </CardHeader>
             <CardContent>
-              <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-4">
                 <Field>
                   <FieldLabel htmlFor="name">설비명</FieldLabel>
                   <Input
@@ -155,6 +156,16 @@ export default function NewEquipmentPage() {
                     value={basic.name}
                     onChange={(e) => setBasic((f) => ({ ...f, name: e.target.value }))}
                     placeholder="예: 3층 도금라인 도금조"
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="floor">층</FieldLabel>
+                  <Input
+                    id="floor"
+                    value={basic.floor}
+                    onChange={(e) => setBasic((f) => ({ ...f, floor: e.target.value.replace(/[^0-9]/g, '') }))}
+                    placeholder="예: 3"
+                    inputMode="numeric"
                   />
                 </Field>
                 <Field>

@@ -16,7 +16,11 @@ function deleteLocalUpload(url: string) {
 }
 
 export async function getEquipmentList() {
-  return selectAll("equipment").sort((a, b) => a.name.localeCompare(b.name))
+  return selectAll("equipment").sort((a, b) => {
+    const floorA = Number.parseInt(a.floor, 10) || 999
+    const floorB = Number.parseInt(b.floor, 10) || 999
+    return floorA - floorB || a.name.localeCompare(b.name)
+  })
 }
 
 export async function getEquipmentById(id: number) {
@@ -25,6 +29,7 @@ export async function getEquipmentById(id: number) {
 
 export interface EquipmentInput {
   name: string
+  floor?: string
   department?: string
   manager?: string
   inspectorName?: string
@@ -39,6 +44,7 @@ export interface EquipmentInput {
 export async function createEquipment(data: EquipmentInput) {
   const created = insertRow("equipment", {
     name: data.name,
+    floor: data.floor || null,
     department: data.department || null,
     manager: data.manager || null,
     inspectorName: data.inspectorName || null,
@@ -57,6 +63,7 @@ export async function createEquipment(data: EquipmentInput) {
 export async function updateEquipment(id: number, data: Partial<EquipmentInput>) {
   updateById("equipment", id, {
     ...(data.name !== undefined ? { name: data.name } : {}),
+    ...(data.floor !== undefined ? { floor: data.floor || null } : {}),
     ...(data.department !== undefined ? { department: data.department || null } : {}),
     ...(data.manager !== undefined ? { manager: data.manager || null } : {}),
     ...(data.inspectorName !== undefined ? { inspectorName: data.inspectorName || null } : {}),
