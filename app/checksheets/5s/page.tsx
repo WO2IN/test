@@ -1,4 +1,4 @@
-import { WrenchIcon } from 'lucide-react'
+import { Layers3Icon, WrenchIcon } from 'lucide-react'
 import { getFiveSTargets, createFiveSTarget, deleteFiveSTarget } from '@/app/actions/five-s'
 import { SiteHeader } from '@/components/site-header'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty'
@@ -44,19 +44,28 @@ export default async function FiveSIndexPage() {
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="flex flex-col gap-5">
-            {(['1층', '2층', '3층'] as const).map((floor) => {
-              const items = targetList.filter((item: any) => (item.floor || item.name.match(/([123]층)/)?.[1] || '1층') === floor)
-              if (items.length === 0) return null
-              return (
-                <section key={floor} className="overflow-hidden border border-border">
-                  <h2 className="border-b border-border bg-muted px-4 py-3 text-base font-semibold">{floor}</h2>
-                  <div className="flex flex-col divide-y divide-border">
-                    {items.map((item) => (
+          <div className="space-y-6">
+            {(() => {
+              const floors = new Map<string, typeof targetList>()
+              for (const item of targetList) {
+                const floor = item.floor?.replace('층', '') || item.name.match(/(\d+)층/)?.[1] || '미지정'
+                floors.set(floor, [...(floors.get(floor) ?? []), item])
+              }
+              const entries = ['1', '2', '3', ...floors.keys()].filter((floor, index, all) => all.indexOf(floor) === index)
+              return entries.map((floor) => (
+                <section key={floor} aria-labelledby={`five-s-floor-${floor}`}>
+                  <div className="mb-2 flex items-center gap-2">
+                    <Layers3Icon className="size-5 text-primary" aria-hidden="true" />
+                    <h2 id={`five-s-floor-${floor}`} className="font-semibold">{floor === '미지정' ? '층 미지정' : `${floor}층`}</h2>
+                    <span className="text-sm text-muted-foreground">{floors.get(floor)?.length ?? 0}개</span>
+                  </div>
+                  <div className="flex flex-col divide-y divide-border border border-border">
+                    {floors.get(floor)?.map((item) => (
                       <TargetListRow
                         key={item.id}
                         href={`/checksheets/5s/${item.id}`}
                         name={item.name}
+                        floor={item.floor || item.name.match(/(\d+)층/)?.[0]}
                         department={item.department}
                         manager={item.manager}
                         deleteTitle="이 항목을 삭제할까요?"
@@ -67,8 +76,8 @@ export default async function FiveSIndexPage() {
                     ))}
                   </div>
                 </section>
-              )
-            })}
+              ))
+            })()}
           </div>
         )}
       </main>
