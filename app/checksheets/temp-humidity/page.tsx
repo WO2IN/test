@@ -4,6 +4,7 @@ import { SiteHeader } from '@/components/site-header'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty'
 import { TargetCreateDialog } from '@/components/target-create-dialog'
 import { TargetListRow } from '@/components/target-list-row'
+import { FloorGroup, groupByFloor } from '@/components/floor-group'
 
 export default async function TempHumidityIndexPage() {
   const targetList = await getTempHumidityTargets()
@@ -44,19 +45,15 @@ export default async function TempHumidityIndexPage() {
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="flex flex-col divide-y divide-border border border-border">
-            {targetList.map((item) => (
-              <TargetListRow
-                key={item.id}
-                href={`/checksheets/temp-humidity/${item.id}`}
-                name={item.name}
-                department={item.department}
-                manager={item.manager}
-                deleteTitle="이 항목을 삭제할까요?"
-                deleteDescription={`${item.name} 항목과 입력된 온/습도 점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
-                deleteAction={deleteTempHumidityTarget}
-                id={item.id}
-              />
+          <div className="flex flex-col gap-6">
+            {[...groupByFloor(targetList)].map(([floor, items]) => items.length > 0 && (
+              <FloorGroup key={floor} floor={floor}>
+                <div className="flex flex-col divide-y divide-border border border-border">
+                  {items.map((item) => (
+                    <TargetListRow key={item.id} href={`/checksheets/temp-humidity/${item.id}`} name={item.name} department={item.department} manager={item.manager} deleteTitle="이 항목을 삭제할까요?" deleteDescription={`${item.name} 항목과 입력된 온/습도 점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`} deleteAction={deleteTempHumidityTarget} id={item.id} />
+                  ))}
+                </div>
+              </FloorGroup>
             ))}
           </div>
         )}

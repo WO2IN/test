@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { SiteHeader } from '@/components/site-header'
 import { EquipmentCard } from '@/components/equipment-card'
+import { FloorGroup, groupByFloor } from '@/components/floor-group'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
 import { buttonVariants } from '@/components/ui/button'
 import { FactoryIcon, PlusIcon } from 'lucide-react'
@@ -37,9 +38,13 @@ export default async function EquipmentPage() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {list.map((item) => (
-              <EquipmentCard key={item.id} equipment={item} />
+          <div className="flex flex-col gap-6">
+            {[...groupByFloor(list)].map(([floor, items]) => items.length > 0 && (
+              <FloorGroup key={floor} floor={floor}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {items.map((item) => <EquipmentCard key={item.id} equipment={item} />)}
+                </div>
+              </FloorGroup>
             ))}
           </div>
         )}

@@ -5,6 +5,7 @@ import { SiteHeader } from '@/components/site-header'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty'
 import { buttonVariants } from '@/components/ui/button'
 import { TargetListRow } from '@/components/target-list-row'
+import { FloorGroup, groupByFloor } from '@/components/floor-group'
 
 export default async function DailyCheckIndexPage() {
   const equipmentList = await getEquipmentList()
@@ -40,19 +41,15 @@ export default async function DailyCheckIndexPage() {
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="flex flex-col divide-y divide-border border border-border">
-            {equipmentList.map((item) => (
-              <TargetListRow
-                key={item.id}
-                href={`/checksheets/daily/${item.id}`}
-                name={item.name}
-                department={item.department}
-                manager={item.manager}
-                deleteTitle="이 설비를 삭제할까요?"
-                deleteDescription={`${item.name} 설비와 연관된 사진, 점검항목, 일상점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
-                deleteAction={deleteEquipment}
-                id={item.id}
-              />
+          <div className="flex flex-col gap-6">
+            {[...groupByFloor(equipmentList)].map(([floor, items]) => items.length > 0 && (
+              <FloorGroup key={floor} floor={floor}>
+                <div className="flex flex-col divide-y divide-border border border-border">
+                  {items.map((item) => (
+                    <TargetListRow key={item.id} href={`/checksheets/daily/${item.id}`} name={item.name} department={item.department} manager={item.manager} deleteTitle="이 설비를 삭제할까요?" deleteDescription={`${item.name} 설비와 연관된 사진, 점검항목, 일상점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`} deleteAction={deleteEquipment} id={item.id} />
+                  ))}
+                </div>
+              </FloorGroup>
             ))}
           </div>
         )}
