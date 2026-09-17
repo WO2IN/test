@@ -44,20 +44,31 @@ export default async function FiveSIndexPage() {
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="flex flex-col divide-y divide-border border border-border">
-            {targetList.map((item) => (
-              <TargetListRow
-                key={item.id}
-                href={`/checksheets/5s/${item.id}`}
-                name={item.name}
-                department={item.department}
-                manager={item.manager}
-                deleteTitle="이 항목을 삭제할까요?"
-                deleteDescription={`${item.name} 항목과 입력된 3정 5S 점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
-                deleteAction={deleteFiveSTarget}
-                id={item.id}
-              />
-            ))}
+          <div className="flex flex-col gap-5">
+            {(['1층', '2층', '3층'] as const).map((floor) => {
+              const items = targetList.filter((item: any) => (item.floor || item.name.match(/([123]층)/)?.[1] || '1층') === floor)
+              if (items.length === 0) return null
+              return (
+                <section key={floor} className="overflow-hidden border border-border">
+                  <h2 className="border-b border-border bg-muted px-4 py-3 text-base font-semibold">{floor}</h2>
+                  <div className="flex flex-col divide-y divide-border">
+                    {items.map((item) => (
+                      <TargetListRow
+                        key={item.id}
+                        href={`/checksheets/5s/${item.id}`}
+                        name={item.name}
+                        department={item.department}
+                        manager={item.manager}
+                        deleteTitle="이 항목을 삭제할까요?"
+                        deleteDescription={`${item.name} 항목과 입력된 3정 5S 점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
+                        deleteAction={deleteFiveSTarget}
+                        id={item.id}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )
+            })}
           </div>
         )}
       </main>

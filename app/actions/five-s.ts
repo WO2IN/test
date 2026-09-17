@@ -13,7 +13,7 @@ export async function getFiveSTargetById(id: number) {
   return findOne("fiveSTargets", (t: any) => t.id === id)
 }
 
-export async function createFiveSTarget(data: { name: string; department?: string; manager?: string; standard?: string }) {
+export async function createFiveSTarget(data: { name: string; floor?: string; department?: string; manager?: string; standard?: string }) {
   const result = insertRow("fiveSTargets", { ...data, createdAt: new Date().toISOString() })
   revalidatePath("/checksheets/5s")
   return result
@@ -31,7 +31,7 @@ export async function deleteFiveSTarget(id: number) {
   revalidatePath("/checksheets/5s")
 }
 
-export async function updateFiveSTarget(id: number, data: { name?: string; department?: string; manager?: string; standard?: string }) {
+export async function updateFiveSTarget(id: number, data: { name?: string; floor?: string; department?: string; manager?: string; standard?: string }) {
   const result = updateById("fiveSTargets", id, data)
   revalidatePath("/checksheets/5s")
   revalidatePath(`/checksheets/5s/${id}`)

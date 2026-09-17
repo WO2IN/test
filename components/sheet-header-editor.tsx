@@ -25,6 +25,7 @@ interface NumberFieldDef {
 interface SheetHeaderEditorProps {
   id: number
   name: string
+  floor?: string
   department: string
   manager: string
   standard?: string
@@ -39,6 +40,7 @@ function buildFormValues(
   department: string,
   manager: string,
   standard: string | undefined,
+  floor: string | undefined,
   numberFields: NumberFieldDef[] | undefined,
 ) {
   const values: Record<string, string> = {
@@ -46,6 +48,7 @@ function buildFormValues(
     department,
     manager,
     standard: standard ?? '',
+    floor: floor ?? '1층',
   }
 
   if (numberFields) {
@@ -63,6 +66,7 @@ export function SheetHeaderEditor({
   department,
   manager,
   standard,
+  floor,
   updateAction,
   showStandard,
   standardLabel = "관리기준",
@@ -70,14 +74,14 @@ export function SheetHeaderEditor({
 }: SheetHeaderEditorProps) {
   const [open, setOpen] = useState(false)
   const [formValues, setFormValues] = useState<Record<string, string>>(() =>
-    buildFormValues(name, department, manager, standard, numberFields),
+    buildFormValues(name, department, manager, standard, floor, numberFields),
   )
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
   function handleOpenChange(nextOpen: boolean) {
     if (nextOpen) {
-      setFormValues(buildFormValues(name, department, manager, standard, numberFields))
+      setFormValues(buildFormValues(name, department, manager, standard, floor, numberFields))
     }
     setOpen(nextOpen)
   }
@@ -90,6 +94,7 @@ export function SheetHeaderEditor({
     e.preventDefault()
     const data: Record<string, string | number | null> = {
       name: formValues.name,
+      floor: formValues.floor || '1층',
       department: formValues.department,
       manager: formValues.manager,
     }
@@ -131,6 +136,16 @@ export function SheetHeaderEditor({
             <FieldLabel htmlFor="name">항목명 / 설비명</FieldLabel>
             <FieldContent>
               <Input id="name" name="name" value={formValues.name} onChange={(e) => updateField('name', e.target.value)} required />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="floor">층</FieldLabel>
+            <FieldContent>
+              <select id="floor" value={formValues.floor ?? '1층'} onChange={(e) => updateField('floor', e.target.value)} className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm">
+                <option value="1층">1층</option>
+                <option value="2층">2층</option>
+                <option value="3층">3층</option>
+              </select>
             </FieldContent>
           </Field>
           <Field>

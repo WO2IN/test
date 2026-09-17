@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation'
 interface TargetCreateDialogProps {
   title: string
   triggerText: string
-  createAction: (data: { name: string; department?: string; manager?: string; standard?: string }) => Promise<{ id: number }>
+  createAction: (data: { name: string; floor?: string; department?: string; manager?: string; standard?: string }) => Promise<{ id: number }>
   redirectPathPrefix: string
 }
 
@@ -34,6 +34,7 @@ export function TargetCreateDialog({ title, triggerText, createAction, redirectP
     const formData = new FormData(e.currentTarget)
     const data = {
       name: formData.get('name') as string,
+      floor: formData.get('floor') as string,
       department: formData.get('department') as string,
       manager: formData.get('manager') as string,
       standard: formData.get('standard') as string,
@@ -72,6 +73,16 @@ export function TargetCreateDialog({ title, triggerText, createAction, redirectP
             <FieldLabel htmlFor="name">항목명 / 구역명</FieldLabel>
             <FieldContent>
               <Input id="name" name="name" placeholder="예: 3층 도금라인" required />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="floor">층</FieldLabel>
+            <FieldContent>
+              <select id="floor" name="floor" defaultValue="1층" className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm">
+                <option value="1층">1층</option>
+                <option value="2층">2층</option>
+                <option value="3층">3층</option>
+              </select>
             </FieldContent>
           </Field>
           <Field>
