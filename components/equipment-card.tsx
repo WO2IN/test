@@ -23,6 +23,7 @@ interface EquipmentCardProps {
   equipment: {
     id: number
     name: string
+    floor?: string | null
     department: string | null
     manager: string | null
   }
@@ -54,6 +55,11 @@ export function EquipmentCard({ equipment }: EquipmentCardProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+        {equipment.floor && (
+          <div className="flex items-center gap-2 font-medium text-foreground">
+            <span className="rounded-md bg-secondary px-2 py-0.5 text-xs">{equipment.floor}층</span>
+          </div>
+        )}
         {equipment.department && (
           <div className="flex items-center gap-2">
             <BuildingIcon className="size-3.5" />

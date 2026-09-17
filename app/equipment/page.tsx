@@ -3,11 +3,23 @@ import { SiteHeader } from '@/components/site-header'
 import { EquipmentCard } from '@/components/equipment-card'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
 import { buttonVariants } from '@/components/ui/button'
-import { FactoryIcon, PlusIcon } from 'lucide-react'
+import { FactoryIcon, PlusIcon, Layers3Icon } from 'lucide-react'
 import { getEquipmentList } from '@/app/actions/equipment'
 
 export default async function EquipmentPage() {
   const list = await getEquipmentList()
+  const floors = new Map<string, typeof list>()
+  for (const item of list) {
+    const detectedFloor = item.floor || item.name.match(/(\d+)층/)?.[1] || '미지정'
+    const floorItems = floors.get(detectedFloor) ?? []
+    floorItems.push(item)
+    floors.set(detectedFloor, floorItems)
+  }
+  const floorEntries = [...floors.entries()].sort(([a], [b]) => {
+    if (a === '미지정') return 1
+    if (b === '미지정') return -1
+    return Number(a) - Number(b)
+  })
 
   return (
     <div className="min-h-screen">
@@ -37,9 +49,22 @@ export default async function EquipmentPage() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {list.map((item) => (
-              <EquipmentCard key={item.id} equipment={item} />
+          <div className="space-y-8">
+            {floorEntries.map(([floor, items]) => (
+              <section key={floor} aria-labelledby={`floor-${floor}`}>
+                <div className="mb-3 flex items-center gap-2">
+                  <Layers3Icon className="size-5 text-primary" aria-hidden="true" />
+                  <h2 id={`floor-${floor}`} className="text-lg font-semibold">
+                    {floor === '미지정' ? '층 미지정' : `${floor}층`}
+                  </h2>
+                  <span className="text-sm text-muted-foreground">{items.length}개</span>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {items.map((item) => (
+                    <EquipmentCard key={item.id} equipment={{ ...item, floor: item.floor || (item.name.match(/(\\d+)층/)?.[1] ?? null) }} />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         )}
