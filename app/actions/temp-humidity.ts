@@ -13,6 +13,7 @@ export async function getTempHumidityTargetById(id: number) {
 
 export async function createTempHumidityTarget(data: {
   name: string
+  floor?: string
   department?: string
   manager?: string
   standard?: string

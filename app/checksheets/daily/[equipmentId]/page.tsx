@@ -82,6 +82,7 @@ export default async function DailyCheckDetailPage({
                 <SheetHeaderEditor
                   id={equipId}
                   name={equip.name}
+                  floor={equip.floor || equip.name.match(/(\d+)층/)?.[0] || ''}
                   department={equip.department || ''}
                   manager={equip.manager || ''}
                   updateAction={updateEquipment}
