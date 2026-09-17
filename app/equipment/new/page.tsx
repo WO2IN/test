@@ -161,7 +161,7 @@ export default function NewEquipmentPage() {
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="floor">층</FieldLabel>
-                  <Select value={basic.floor || undefined} onValueChange={(value) => setBasic((f) => ({ ...f, floor: value ?? '' }))}>
+                  <Select value={basic.floor ?? null} onValueChange={(value) => setBasic((f) => ({ ...f, floor: value ?? '' }))}>
                     <SelectTrigger id="floor" className="w-full">
                       <SelectValue placeholder="층을 선택하세요" />
                     </SelectTrigger>
