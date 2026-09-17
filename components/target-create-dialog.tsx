@@ -78,10 +78,11 @@ export function TargetCreateDialog({ title, triggerText, createAction, redirectP
           <Field>
             <FieldLabel htmlFor="floor">층</FieldLabel>
             <FieldContent>
-              <select id="floor" name="floor" defaultValue="1층" className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm">
-                <option value="1층">1층</option>
-                <option value="2층">2층</option>
-                <option value="3층">3층</option>
+              <select id="floor" name="floor" defaultValue="" className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm">
+                <option value="">미지정</option>
+                <option value="1">1층</option>
+                <option value="2">2층</option>
+                <option value="3">3층</option>
               </select>
             </FieldContent>
           </Field>

@@ -26,7 +26,8 @@
       "managerDesc": "주간 점검 확인",
       "managerCycle": "1회/주",
       "escalationNote": null,
-      "createdAt": "2026-08-21T05:47:09.371Z"
+      "createdAt": "2026-08-21T05:47:09.371Z",
+      "floor": "3층"
     }
   ],
   "equipmentPhotos": [
