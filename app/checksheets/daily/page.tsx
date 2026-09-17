@@ -45,9 +45,7 @@ export default async function DailyCheckIndexPage() {
             {(() => {
               const floors = new Map<string, typeof equipmentList>()
               for (const item of equipmentList) {
-                const floor = item.floor
-      ? String(item.floor).replace(/층$/, '')
-      : item.name.match(/(\d+)층/)?.[1] || '미지정'
+                const floor = item.floor ? String(item.floor).replace(/층$/, '') : '미지정'
                 floors.set(floor, [...(floors.get(floor) ?? []), item])
               }
               const entries = ['1', '2', '3', ...floors.keys()].filter((floor, index, all) => all.indexOf(floor) === index)
@@ -59,7 +57,7 @@ export default async function DailyCheckIndexPage() {
                     <span className="text-sm text-muted-foreground">{floors.get(floor)?.length ?? 0}개</span>
                   </div>
                   <div className="flex flex-col divide-y divide-border border border-border">
-                    {floors.get(floor)?.map((item) => <TargetListRow key={item.id} href={`/checksheets/daily/${item.id}`} name={item.name} floor={item.floor || item.name.match(/(\d+)층/)?.[0]} department={item.department} manager={item.manager} deleteTitle="이 설비를 삭제할까요?" deleteDescription={`${item.name} 설비와 연관된 사진, 점검항목, 일상점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`} deleteAction={deleteEquipment} id={item.id} />)}
+                    {floors.get(floor)?.map((item) => <TargetListRow key={item.id} href={`/checksheets/daily/${item.id}`} name={item.name} floor={item.floor || ''} department={item.department} manager={item.manager} deleteTitle="이 설비를 삭제할까요?" deleteDescription={`${item.name} 설비와 연관된 사진, 점검항목, 일상점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`} deleteAction={deleteEquipment} id={item.id} />)}
                   </div>
                 </section>
               ))

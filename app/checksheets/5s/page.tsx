@@ -48,9 +48,7 @@ export default async function FiveSIndexPage() {
             {(() => {
               const floors = new Map<string, typeof targetList>()
               for (const item of targetList) {
-                const floor = item.floor
-                  ? String(item.floor).replace(/층$/, '')
-                  : item.name.match(/(\d+)층/)?.[1] || '미지정'
+                const floor = item.floor ? String(item.floor).replace(/층$/, '') : '미지정'
                 floors.set(floor, [...(floors.get(floor) ?? []), item])
               }
               const entries = ['1', '2', '3', ...floors.keys()].filter((floor, index, all) => all.indexOf(floor) === index)
@@ -67,7 +65,7 @@ export default async function FiveSIndexPage() {
                         key={item.id}
                         href={`/checksheets/5s/${item.id}`}
                         name={item.name}
-                        floor={item.floor || item.name.match(/(\d+)층/)?.[0]}
+                        floor={item.floor || ''}
                         department={item.department}
                         manager={item.manager}
                         deleteTitle="이 항목을 삭제할까요?"

@@ -81,7 +81,7 @@ export default async function TempHumidityPage({
                 <SheetHeaderEditor
                   id={tId}
                   name={target.name}
-                  floor={target.floor || target.name.match(/(\d+)층/)?.[0] || ''}
+                  floor={target.floor || ''}
                   department={target.department || ''}
                   manager={target.manager || ''}
                   standard={target.standard || '관리기준: 온도 20±10℃ · 습도 60% 이하'}

@@ -77,7 +77,7 @@ export default async function FiveSPage({
                 <SheetHeaderEditor
                   id={tId}
                   name={target.name}
-                  floor={target.floor || target.name.match(/([123]층)/)?.[1] || '1층'}
+                  floor={target.floor || ''}
                   department={target.department || ''}
                   manager={target.manager || ''}
                   standard={target.standard || '표시: ◎(매우잘함) / ○(잘함) / △(보통수준) / V(미흡함) / ×(대단히 미흡함) / N/A(해당사항 없음)'}

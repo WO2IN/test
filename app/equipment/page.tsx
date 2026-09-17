@@ -10,10 +10,7 @@ export default async function EquipmentPage() {
   const list = await getEquipmentList()
   const floors = new Map<string, typeof list>()
   for (const item of list) {
-    // 지정한 층을 항상 우선하고, 기존 이름 기반 추출은 층 미지정 데이터에만 사용합니다.
-    const detectedFloor = item.floor
-      ? String(item.floor).replace(/층$/, '')
-      : item.name.match(/(\d+)층/)?.[1] || '미지정'
+    const detectedFloor = item.floor ? String(item.floor).replace(/층$/, '') : '미지정'
     const floorItems = floors.get(detectedFloor) ?? []
     floorItems.push(item)
     floors.set(detectedFloor, floorItems)
@@ -62,7 +59,7 @@ export default async function EquipmentPage() {
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {items.map((item) => (
-                    <EquipmentCard key={item.id} equipment={{ ...item, floor: item.floor || (item.name.match(/(\\d+)층/)?.[1] ?? null) }} />
+                    <EquipmentCard key={item.id} equipment={item} />
                   ))}
                 </div>
               </section>
