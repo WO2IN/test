@@ -155,6 +155,12 @@ export async function bulkFillFiveSEntries(
   const startDay = Math.max(1, fromDay)
 
   for (const item of items) {
+    const hasNA = selectWhere(
+      "fiveSEntries",
+      (e: any) => e.sheetId === sheetId && e.itemCode === item.code && e.value === "N/A",
+    ).length > 0
+    if (hasNA) continue
+
     const scheduledDays = scheduledDaysForCycle(
       year,
       month,
