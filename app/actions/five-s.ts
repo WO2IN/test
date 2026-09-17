@@ -13,8 +13,13 @@ export async function getFiveSTargetById(id: number) {
   return findOne("fiveSTargets", (t: any) => t.id === id)
 }
 
+function normalizeFloor(floor?: string | null) {
+  const value = String(floor ?? '').trim().replace(/층$/, '')
+  return ['1', '2', '3'].includes(value) ? value : null
+}
+
 export async function createFiveSTarget(data: { name: string; floor?: string; department?: string; manager?: string; standard?: string }) {
-  const result = insertRow("fiveSTargets", { ...data, createdAt: new Date().toISOString() })
+  const result = insertRow("fiveSTargets", { ...data, floor: normalizeFloor(data.floor), createdAt: new Date().toISOString() })
   revalidatePath("/checksheets/5s")
   return result
 }
@@ -32,9 +37,13 @@ export async function deleteFiveSTarget(id: number) {
 }
 
 export async function updateFiveSTarget(id: number, data: { name?: string; floor?: string; department?: string; manager?: string; standard?: string }) {
-  const result = updateById("fiveSTargets", id, data)
+  const result = updateById("fiveSTargets", id, {
+    ...data,
+    ...(data.floor !== undefined ? { floor: normalizeFloor(data.floor) } : {}),
+  })
   revalidatePath("/checksheets/5s")
   revalidatePath(`/checksheets/5s/${id}`)
+  revalidatePath("/checksheets/5s", "layout")
   return result
 }
 

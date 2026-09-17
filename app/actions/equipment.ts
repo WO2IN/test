@@ -5,6 +5,11 @@ import path from "node:path"
 import { revalidatePath } from "next/cache"
 import { findOne, insertRow, removeWhere, selectAll, selectWhere, updateById } from "@/lib/local-store"
 
+function normalizeFloor(floor?: string | null) {
+  const value = String(floor ?? '').trim().replace(/층$/, '')
+  return ['1', '2', '3'].includes(value) ? value : null
+}
+
 function deleteLocalUpload(url: string) {
   if (!url || !url.startsWith("/uploads/")) return
   try {
@@ -44,7 +49,7 @@ export interface EquipmentInput {
 export async function createEquipment(data: EquipmentInput) {
   const created = insertRow("equipment", {
     name: data.name,
-    floor: data.floor || null,
+    floor: normalizeFloor(data.floor),
     department: data.department || null,
     manager: data.manager || null,
     inspectorName: data.inspectorName || null,
@@ -63,7 +68,7 @@ export async function createEquipment(data: EquipmentInput) {
 export async function updateEquipment(id: number, data: Partial<EquipmentInput>) {
   updateById("equipment", id, {
     ...(data.name !== undefined ? { name: data.name } : {}),
-    ...(data.floor !== undefined ? { floor: data.floor || null } : {}),
+    ...(data.floor !== undefined ? { floor: normalizeFloor(data.floor) } : {}),
     ...(data.department !== undefined ? { department: data.department || null } : {}),
     ...(data.manager !== undefined ? { manager: data.manager || null } : {}),
     ...(data.inspectorName !== undefined ? { inspectorName: data.inspectorName || null } : {}),

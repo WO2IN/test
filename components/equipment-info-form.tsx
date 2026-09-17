@@ -28,7 +28,7 @@ export function EquipmentInfoForm({ equipment }: EquipmentInfoFormProps) {
       </Field>
       <Field>
         <FieldLabel>층</FieldLabel>
-        <Select defaultValue={equipment.floor ?? undefined} onValueChange={(value) => handleBlur('floor', value ?? '')}>
+        <Select defaultValue={equipment.floor ? String(equipment.floor).replace(/층$/, '') : undefined} onValueChange={(value) => handleBlur('floor', value ?? '')}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="층을 선택하세요" />
           </SelectTrigger>

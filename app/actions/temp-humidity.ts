@@ -11,6 +11,11 @@ export async function getTempHumidityTargetById(id: number) {
   return findOne("tempHumidityTargets", (t: any) => t.id === id)
 }
 
+function normalizeFloor(floor?: string | null) {
+  const value = String(floor ?? '').trim().replace(/층$/, '')
+  return ['1', '2', '3'].includes(value) ? value : null
+}
+
 export async function createTempHumidityTarget(data: {
   name: string
   floor?: string
@@ -28,6 +33,7 @@ export async function createTempHumidityTarget(data: {
     humidityLower: 0,
     humidityUpper: 60,
     ...data,
+    floor: normalizeFloor(data.floor),
     createdAt: new Date().toISOString(),
   })
   revalidatePath("/checksheets/temp-humidity")
@@ -48,6 +54,7 @@ export async function updateTempHumidityTarget(
   id: number,
   data: {
     name?: string
+    floor?: string
     department?: string
     manager?: string
     standard?: string
@@ -57,9 +64,13 @@ export async function updateTempHumidityTarget(
     humidityUpper?: number | null
   },
 ) {
-  const result = updateById("tempHumidityTargets", id, data)
+  const result = updateById("tempHumidityTargets", id, {
+    ...data,
+    ...(data.floor !== undefined ? { floor: normalizeFloor(data.floor) } : {}),
+  })
   revalidatePath("/checksheets/temp-humidity")
   revalidatePath(`/checksheets/temp-humidity/${id}`)
+  revalidatePath("/checksheets/temp-humidity", "layout")
   return result
 }
 

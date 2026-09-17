@@ -48,7 +48,7 @@ function buildFormValues(
     department,
     manager,
     standard: standard ?? '',
-    floor: floor ?? '1층',
+    floor: String(floor ?? '').replace(/층$/, '') || '1',
   }
 
   if (numberFields) {
@@ -94,7 +94,7 @@ export function SheetHeaderEditor({
     e.preventDefault()
     const data: Record<string, string | number | null> = {
       name: formValues.name,
-      floor: formValues.floor || '1층',
+      floor: formValues.floor || '1',
       department: formValues.department,
       manager: formValues.manager,
     }
@@ -141,10 +141,10 @@ export function SheetHeaderEditor({
           <Field>
             <FieldLabel htmlFor="floor">층</FieldLabel>
             <FieldContent>
-              <select id="floor" value={formValues.floor ?? '1층'} onChange={(e) => updateField('floor', e.target.value)} className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm">
-                <option value="1층">1층</option>
-                <option value="2층">2층</option>
-                <option value="3층">3층</option>
+              <select id="floor" value={formValues.floor ?? '1'} onChange={(e) => updateField('floor', e.target.value)} className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm">
+                <option value="1">1층</option>
+                <option value="2">2층</option>
+                <option value="3">3층</option>
               </select>
             </FieldContent>
           </Field>
