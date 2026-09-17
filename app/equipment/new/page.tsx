@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PhotoStageUploader } from '@/components/photo-stage-uploader'
 import { CheckItemEditor, type DraftCheckItem } from '@/components/check-item-editor'
 import { InspectorManagerFields, EMPTY_INSPECTOR_MANAGER_VALUE, type InspectorManagerValue } from '@/components/inspector-manager-fields'
@@ -160,13 +161,16 @@ export default function NewEquipmentPage() {
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="floor">층</FieldLabel>
-                  <Input
-                    id="floor"
-                    value={basic.floor}
-                    onChange={(e) => setBasic((f) => ({ ...f, floor: e.target.value.replace(/[^0-9]/g, '') }))}
-                    placeholder="예: 3"
-                    inputMode="numeric"
-                  />
+                  <Select value={basic.floor || undefined} onValueChange={(value) => setBasic((f) => ({ ...f, floor: value ?? '' }))}>
+                    <SelectTrigger id="floor" className="w-full">
+                      <SelectValue placeholder="층을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1층</SelectItem>
+                      <SelectItem value="2">2층</SelectItem>
+                      <SelectItem value="3">3층</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="department">점검부서</FieldLabel>

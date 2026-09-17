@@ -2,6 +2,7 @@
 
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { updateEquipment } from '@/app/actions/equipment'
 
 interface EquipmentInfoFormProps {
@@ -27,11 +28,16 @@ export function EquipmentInfoForm({ equipment }: EquipmentInfoFormProps) {
       </Field>
       <Field>
         <FieldLabel>층</FieldLabel>
-        <Input
-          defaultValue={equipment.floor ?? ''}
-          onBlur={(e) => handleBlur('floor', e.target.value.replace(/[^0-9]/g, ''))}
-          inputMode="numeric"
-        />
+        <Select defaultValue={equipment.floor ?? undefined} onValueChange={(value) => handleBlur('floor', value ?? '')}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="층을 선택하세요" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1">1층</SelectItem>
+            <SelectItem value="2">2층</SelectItem>
+            <SelectItem value="3">3층</SelectItem>
+          </SelectContent>
+        </Select>
       </Field>
       <Field>
         <FieldLabel>점검부서</FieldLabel>
