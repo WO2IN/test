@@ -82,6 +82,7 @@ export default async function DailyCheckDetailPage({
                 <SheetHeaderEditor
                   id={equipId}
                   name={equip.name}
+                  floor={equip.floor || ''}
                   department={equip.department || ''}
                   manager={equip.manager || ''}
                   updateAction={updateEquipment}

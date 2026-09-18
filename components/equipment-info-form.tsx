@@ -2,7 +2,9 @@
 
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { updateEquipment } from '@/app/actions/equipment'
+import { FLOOR_OPTIONS, toFloorSelectValue } from '@/lib/floor'
 
 interface EquipmentInfoFormProps {
   equipment: {
@@ -24,14 +26,6 @@ export function EquipmentInfoForm({ equipment }: EquipmentInfoFormProps) {
       <Field>
         <FieldLabel>설비명</FieldLabel>
         <Input defaultValue={equipment.name} onBlur={(e) => handleBlur('name', e.target.value)} />
-      </Field>
-      <Field>
-        <FieldLabel>층</FieldLabel>
-        <Input
-          defaultValue={equipment.floor ?? ''}
-          onBlur={(e) => handleBlur('floor', e.target.value.replace(/[^0-9]/g, ''))}
-          inputMode="numeric"
-        />
       </Field>
       <Field>
         <FieldLabel>점검부서</FieldLabel>

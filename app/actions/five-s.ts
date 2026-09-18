@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { findOne, insertRow, removeWhere, selectWhere, updateById, selectAll } from "@/lib/local-store"
 import { FIVE_S_CATALOG } from "@/lib/constants/five-s-catalog"
+import { canonicalFloor } from "@/lib/floor"
 import { isWeekend, scheduledDaysForCycle } from "@/lib/date-utils"
 
 export async function getFiveSTargets() {
@@ -13,8 +14,12 @@ export async function getFiveSTargetById(id: number) {
   return findOne("fiveSTargets", (t: any) => t.id === id)
 }
 
-export async function createFiveSTarget(data: { name: string; department?: string; manager?: string; standard?: string }) {
-  const result = insertRow("fiveSTargets", { ...data, createdAt: new Date().toISOString() })
+export async function createFiveSTarget(data: { name: string; floor?: string; department?: string; manager?: string; standard?: string }) {
+  const result = insertRow("fiveSTargets", {
+    ...data,
+    floor: canonicalFloor(data.floor, data.name),
+    createdAt: new Date().toISOString(),
+  })
   revalidatePath("/checksheets/5s")
   return result
 }
@@ -31,8 +36,13 @@ export async function deleteFiveSTarget(id: number) {
   revalidatePath("/checksheets/5s")
 }
 
-export async function updateFiveSTarget(id: number, data: { name?: string; department?: string; manager?: string; standard?: string }) {
-  const result = updateById("fiveSTargets", id, data)
+export async function updateFiveSTarget(id: number, data: { name?: string; floor?: string; department?: string; manager?: string; standard?: string }) {
+  const result = updateById("fiveSTargets", id, {
+    ...data,
+    ...(data.floor !== undefined || data.name !== undefined
+      ? { floor: canonicalFloor(data.floor, data.name) }
+      : {}),
+  })
   revalidatePath("/checksheets/5s")
   revalidatePath(`/checksheets/5s/${id}`)
   return result

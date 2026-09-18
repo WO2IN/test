@@ -16,10 +16,12 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
+import { formatFloorLabel } from '@/lib/floor'
 
 interface TargetListRowProps {
   href: string
   name: string
+  floor?: string | null
   department?: string | null
   manager?: string | null
   deleteTitle: string
@@ -31,6 +33,7 @@ interface TargetListRowProps {
 export function TargetListRow({
   href,
   name,
+  floor,
   department,
   manager,
   deleteTitle,
@@ -59,7 +62,7 @@ export function TargetListRow({
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="font-medium">{name}</span>
           <span className="truncate text-sm text-muted-foreground">
-            {department || '부서 미지정'} · {manager || '담당자 미지정'}
+            {formatFloorLabel(floor, name)} · {department || '부서 미지정'} · {manager || '담당자 미지정'}
           </span>
         </div>
         <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />

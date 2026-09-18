@@ -16,11 +16,12 @@ import {
 import { Field, FieldLabel, FieldError, FieldContent } from '@/components/ui/field'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { FLOOR_OPTIONS } from '@/lib/floor'
 
 interface TargetCreateDialogProps {
   title: string
   triggerText: string
-  createAction: (data: { name: string; department?: string; manager?: string; standard?: string }) => Promise<{ id: number }>
+  createAction: (data: { name: string; floor?: string; department?: string; manager?: string; standard?: string }) => Promise<{ id: number }>
   redirectPathPrefix: string
 }
 
@@ -34,6 +35,7 @@ export function TargetCreateDialog({ title, triggerText, createAction, redirectP
     const formData = new FormData(e.currentTarget)
     const data = {
       name: formData.get('name') as string,
+      floor: formData.get('floor') as string,
       department: formData.get('department') as string,
       manager: formData.get('manager') as string,
       standard: formData.get('standard') as string,
@@ -72,6 +74,17 @@ export function TargetCreateDialog({ title, triggerText, createAction, redirectP
             <FieldLabel htmlFor="name">항목명 / 구역명</FieldLabel>
             <FieldContent>
               <Input id="name" name="name" placeholder="예: 3층 도금라인" required />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="floor">층</FieldLabel>
+            <FieldContent>
+              <select id="floor" name="floor" defaultValue="" className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm">
+                <option value="">미지정</option>
+                {FLOOR_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
             </FieldContent>
           </Field>
           <Field>

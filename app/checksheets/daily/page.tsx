@@ -1,10 +1,11 @@
 import Link from 'next/link'
-import { WrenchIcon, PlusIcon } from 'lucide-react'
+import { WrenchIcon, PlusIcon, Layers3Icon } from 'lucide-react'
 import { getEquipmentList, deleteEquipment } from '@/app/actions/equipment'
 import { SiteHeader } from '@/components/site-header'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty'
 import { buttonVariants } from '@/components/ui/button'
 import { TargetListRow } from '@/components/target-list-row'
+import { formatFloorLabel, groupByFloor } from '@/lib/floor'
 
 export default async function DailyCheckIndexPage() {
   const equipmentList = await getEquipmentList()
@@ -40,19 +41,31 @@ export default async function DailyCheckIndexPage() {
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="flex flex-col divide-y divide-border border border-border">
-            {equipmentList.map((item) => (
-              <TargetListRow
-                key={item.id}
-                href={`/checksheets/daily/${item.id}`}
-                name={item.name}
-                department={item.department}
-                manager={item.manager}
-                deleteTitle="이 설비를 삭제할까요?"
-                deleteDescription={`${item.name} 설비와 연관된 사진, 점검항목, 일상점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
-                deleteAction={deleteEquipment}
-                id={item.id}
-              />
+          <div className="space-y-6">
+            {groupByFloor(equipmentList).map(([floor, items]) => (
+              <section key={floor} aria-labelledby={`daily-floor-${floor}`}>
+                <div className="mb-2 flex items-center gap-2">
+                  <Layers3Icon className="size-5 text-primary" aria-hidden="true" />
+                  <h2 id={`daily-floor-${floor}`} className="font-semibold">{formatFloorLabel(floor)}</h2>
+                  <span className="text-sm text-muted-foreground">{items.length}개</span>
+                </div>
+                <div className="flex flex-col divide-y divide-border border border-border">
+                  {items.map((item) => (
+                    <TargetListRow
+                      key={item.id}
+                      href={`/checksheets/daily/${item.id}`}
+                      name={item.name}
+                      floor={item.floor || ''}
+                      department={item.department}
+                      manager={item.manager}
+                      deleteTitle="이 설비를 삭제할까요?"
+                      deleteDescription={`${item.name} 설비와 연관된 사진, 점검항목, 일상점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
+                      deleteAction={deleteEquipment}
+                      id={item.id}
+                    />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         )}

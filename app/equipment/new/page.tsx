@@ -10,10 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PhotoStageUploader } from '@/components/photo-stage-uploader'
 import { CheckItemEditor, type DraftCheckItem } from '@/components/check-item-editor'
 import { InspectorManagerFields, EMPTY_INSPECTOR_MANAGER_VALUE, type InspectorManagerValue } from '@/components/inspector-manager-fields'
 import { EmergencyFlowTable } from '@/components/emergency-flow-table'
+import { FLOOR_OPTIONS } from '@/lib/floor'
 import {
   createEquipment,
   addEquipmentPhoto,
@@ -160,6 +162,7 @@ export default function NewEquipmentPage() {
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="floor">층</FieldLabel>
+<<<<<<< HEAD
                   <Input
                     id="floor"
                     value={basic.floor}
@@ -167,6 +170,18 @@ export default function NewEquipmentPage() {
                     placeholder="예: 3"
                     inputMode="numeric"
                   />
+=======
+                  <Select value={basic.floor ?? null} onValueChange={(value) => setBasic((f) => ({ ...f, floor: value ?? '' }))}>
+                    <SelectTrigger id="floor" className="w-full">
+                      <SelectValue placeholder="층을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    {FLOOR_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    ))}
+                    </SelectContent>
+                  </Select>
+>>>>>>> 39edeed (Update)
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="department">점검부서</FieldLabel>

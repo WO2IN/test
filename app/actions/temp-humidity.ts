@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { findOne, insertRow, removeWhere, selectWhere, updateById, selectAll } from "@/lib/local-store"
+import { canonicalFloor } from "@/lib/floor"
 
 export async function getTempHumidityTargets() {
   return selectAll("tempHumidityTargets")
@@ -13,6 +14,7 @@ export async function getTempHumidityTargetById(id: number) {
 
 export async function createTempHumidityTarget(data: {
   name: string
+  floor?: string
   department?: string
   manager?: string
   standard?: string
@@ -27,6 +29,7 @@ export async function createTempHumidityTarget(data: {
     humidityLower: 0,
     humidityUpper: 60,
     ...data,
+    floor: canonicalFloor(data.floor, data.name),
     createdAt: new Date().toISOString(),
   })
   revalidatePath("/checksheets/temp-humidity")
@@ -47,6 +50,7 @@ export async function updateTempHumidityTarget(
   id: number,
   data: {
     name?: string
+    floor?: string
     department?: string
     manager?: string
     standard?: string
@@ -56,7 +60,12 @@ export async function updateTempHumidityTarget(
     humidityUpper?: number | null
   },
 ) {
-  const result = updateById("tempHumidityTargets", id, data)
+  const result = updateById("tempHumidityTargets", id, {
+    ...data,
+    ...(data.floor !== undefined || data.name !== undefined
+      ? { floor: canonicalFloor(data.floor, data.name) }
+      : {}),
+  })
   revalidatePath("/checksheets/temp-humidity")
   revalidatePath(`/checksheets/temp-humidity/${id}`)
   return result

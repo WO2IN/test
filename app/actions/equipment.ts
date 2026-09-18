@@ -4,6 +4,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { revalidatePath } from "next/cache"
 import { findOne, insertRow, removeWhere, selectAll, selectWhere, updateById } from "@/lib/local-store"
+import { canonicalFloor } from "@/lib/floor"
 
 function deleteLocalUpload(url: string) {
   if (!url || !url.startsWith("/uploads/")) return
@@ -44,7 +45,11 @@ export interface EquipmentInput {
 export async function createEquipment(data: EquipmentInput) {
   const created = insertRow("equipment", {
     name: data.name,
+<<<<<<< HEAD
     floor: data.floor || null,
+=======
+    floor: canonicalFloor(data.floor, data.name),
+>>>>>>> 39edeed (Update)
     department: data.department || null,
     manager: data.manager || null,
     inspectorName: data.inspectorName || null,
@@ -57,13 +62,18 @@ export async function createEquipment(data: EquipmentInput) {
     createdAt: new Date().toISOString(),
   })
   revalidatePath("/equipment")
+  revalidatePath("/checksheets/daily")
   return created
 }
 
 export async function updateEquipment(id: number, data: Partial<EquipmentInput>) {
   updateById("equipment", id, {
     ...(data.name !== undefined ? { name: data.name } : {}),
+<<<<<<< HEAD
     ...(data.floor !== undefined ? { floor: data.floor || null } : {}),
+=======
+    ...(data.floor !== undefined ? { floor: canonicalFloor(data.floor, data.name) } : {}),
+>>>>>>> 39edeed (Update)
     ...(data.department !== undefined ? { department: data.department || null } : {}),
     ...(data.manager !== undefined ? { manager: data.manager || null } : {}),
     ...(data.inspectorName !== undefined ? { inspectorName: data.inspectorName || null } : {}),

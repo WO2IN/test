@@ -1,9 +1,10 @@
-import { WrenchIcon } from 'lucide-react'
+import { WrenchIcon, Layers3Icon } from 'lucide-react'
 import { getTempHumidityTargets, createTempHumidityTarget, deleteTempHumidityTarget } from '@/app/actions/temp-humidity'
 import { SiteHeader } from '@/components/site-header'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty'
 import { TargetCreateDialog } from '@/components/target-create-dialog'
 import { TargetListRow } from '@/components/target-list-row'
+import { formatFloorLabel, groupByFloor } from '@/lib/floor'
 
 export default async function TempHumidityIndexPage() {
   const targetList = await getTempHumidityTargets()
@@ -44,19 +45,31 @@ export default async function TempHumidityIndexPage() {
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="flex flex-col divide-y divide-border border border-border">
-            {targetList.map((item) => (
-              <TargetListRow
-                key={item.id}
-                href={`/checksheets/temp-humidity/${item.id}`}
-                name={item.name}
-                department={item.department}
-                manager={item.manager}
-                deleteTitle="이 항목을 삭제할까요?"
-                deleteDescription={`${item.name} 항목과 입력된 온/습도 점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
-                deleteAction={deleteTempHumidityTarget}
-                id={item.id}
-              />
+          <div className="space-y-6">
+            {groupByFloor(targetList).map(([floor, items]) => (
+              <section key={floor} aria-labelledby={`temp-floor-${floor}`}>
+                <div className="mb-2 flex items-center gap-2">
+                  <Layers3Icon className="size-5 text-primary" aria-hidden="true" />
+                  <h2 id={`temp-floor-${floor}`} className="font-semibold">{formatFloorLabel(floor)}</h2>
+                  <span className="text-sm text-muted-foreground">{items.length}개</span>
+                </div>
+                <div className="flex flex-col divide-y divide-border border border-border">
+                  {items.map((item) => (
+                    <TargetListRow
+                      key={item.id}
+                      href={`/checksheets/temp-humidity/${item.id}`}
+                      name={item.name}
+                      floor={item.floor || ''}
+                      department={item.department}
+                      manager={item.manager}
+                      deleteTitle="이 항목을 삭제할까요?"
+                      deleteDescription={`${item.name} 항목과 입력된 온/습도 점검 내용이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`}
+                      deleteAction={deleteTempHumidityTarget}
+                      id={item.id}
+                    />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         )}
